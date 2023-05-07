@@ -654,7 +654,7 @@ int Prove( // Generate Internal Route Map //
 		});
 
 	/**
-	 PopulateAxiomCallGraph
+	PopulateAxiomCallGraph
 	(
 		std::unordered_map<
 		std::string,
@@ -665,12 +665,13 @@ int Prove( // Generate Internal Route Map //
 		InAxiomCallGraph_Map
 	)
 
-	Description: The modulus (%) operation which checks for divisibility requires 40-70 CPU microinstruction cycles.
-	It is more efficient to just perform this operation once.
+	Description: Adds qualifying axiom subnet netlists to the outbound route map.
 
-	Note: Reduce operation: LHS ==> RHS; Expand operation: RHS ==> LHS.
-	These indirection labels are arbitrary: The goal, is a standard labeling sytem and method to adequately describe
-	the indirection of incoming & outgoing subnets.
+	The modulus (%) operator which checks for divisibility requires 40-70 CPU microinstructions
+	so it is more efficient to perform this expensive operation once.
+
+	Note: The following indirection labels are arbitrary: The chief goal is a standard sytem and method which adequately describes
+	the indirection of incoming & outgoing subnets. Reduce : LHS ==> RHS; Expand : LHS <== RHS.
 	*/
 	auto PopulateAxiomCallGraph =
 		[&]
@@ -697,6 +698,9 @@ int Prove( // Generate Internal Route Map //
 						BigInt128_t, bool>>
 						{ {Theorem_UInt64Vec[guid_UInt64], { {Axiom_i[guid_UInt64], true} } }}
 					);
+
+					std::cout << "InAxiomCallGraph_Map[\"lhs_reduce\"][Theorem_UInt64Vec[guid_UInt64]][Axiom_i[guid_UInt64]] = " <<
+					std::boolalpha << InAxiomCallGraph_Map["lhs_reduce"][Theorem_UInt64Vec[guid_UInt64]][Axiom_i[guid_UInt64]] << std::endl;
 				}
 
 				if (Theorem_UInt64Vec[LHS] % Axiom_i[RHS] == 0)
@@ -710,6 +714,9 @@ int Prove( // Generate Internal Route Map //
 						BigInt128_t, bool>>
 						{ {Theorem_UInt64Vec[guid_UInt64], { {Axiom_i[guid_UInt64], true} } }}
 					);
+
+					std::cout << "InAxiomCallGraph_Map[\"lhs_expand\"][Theorem_UInt64Vec[guid_UInt64]][Axiom_i[guid_UInt64]] = " <<
+					std::boolalpha << InAxiomCallGraph_Map["lhs_expand"][Theorem_UInt64Vec[guid_UInt64]][Axiom_i[guid_UInt64]] << std::endl;
 				}
 
 				if (Theorem_UInt64Vec[RHS] % Axiom_i[LHS] == 0)
@@ -723,6 +730,9 @@ int Prove( // Generate Internal Route Map //
 						BigInt128_t, bool>>
 						{ {Theorem_UInt64Vec[guid_UInt64], { {Axiom_i[guid_UInt64], true} } }}
 					);
+
+					std::cout << "InAxiomCallGraph_Map[\"rhs_reduce\"][Theorem_UInt64Vec[guid_UInt64]][Axiom_i[guid_UInt64]] = " <<
+					std::boolalpha << InAxiomCallGraph_Map["rhs_reduce"][Theorem_UInt64Vec[guid_UInt64]][Axiom_i[guid_UInt64]] << std::endl;
 				}
 
 				if (Theorem_UInt64Vec[RHS] % Axiom_i[RHS] == 0)
@@ -736,11 +746,17 @@ int Prove( // Generate Internal Route Map //
 						BigInt128_t, bool>>
 						{ {Theorem_UInt64Vec[guid_UInt64], { {Axiom_i[guid_UInt64], true} } }}
 					);
+
+					std::cout << "InAxiomCallGraph_Map[\"rhs_expand\"][Theorem_UInt64Vec[guid_UInt64]][Axiom_i[guid_UInt64]] = " <<
+					std::boolalpha << InAxiomCallGraph_Map["rhs_expand"][Theorem_UInt64Vec[guid_UInt64]][Axiom_i[guid_UInt64]] << std::endl;
 				}
 
 				for (const std::vector<BigInt128_t>& Axiom_j : Axioms_UInt64Vec)
 				{
-					if (Axiom_i[LHS] % Axiom_i[LHS] == 0)
+					if (Axiom_i[guid_UInt64] == Axiom_j[guid_UInt64])
+						continue;
+
+					if (Axiom_i[LHS] % Axiom_j[LHS] == 0)
 					{
 						InAxiomCallGraph_Map.emplace
 						(
@@ -749,11 +765,14 @@ int Prove( // Generate Internal Route Map //
 							BigInt128_t,
 							std::unordered_map<
 							BigInt128_t, bool>>
-						{ {Axiom_i[guid_UInt64], { {Axiom_j[guid_UInt64], true} } }}
+							{ {Axiom_i[guid_UInt64], { {Axiom_j[guid_UInt64], true} } }}
 						);
+
+						std::cout << "InAxiomCallGraph_Map[\"lhs_reduce\"][Axiom_i[guid_UInt64]][Axiom_j[guid_UInt64]] = " << 
+						std::boolalpha << InAxiomCallGraph_Map["lhs_reduce"][Axiom_i[guid_UInt64]][Axiom_j[guid_UInt64]] << std::endl;
 					}
 
-					if (Axiom_i[LHS] % Axiom_i[RHS] == 0)
+					if (Axiom_i[LHS] % Axiom_j[RHS] == 0)
 					{
 						InAxiomCallGraph_Map.emplace
 						(
@@ -764,9 +783,12 @@ int Prove( // Generate Internal Route Map //
 							BigInt128_t, bool>>
 							{ {Axiom_i[guid_UInt64], { {Axiom_j[guid_UInt64], true} } }}
 						);
+
+						std::cout << "InAxiomCallGraph_Map[\"lhs_expand\"][Axiom_i[guid_UInt64]][Axiom_j[guid_UInt64]] = " <<
+						std::boolalpha << InAxiomCallGraph_Map["lhs_expand"][Axiom_i[guid_UInt64]][Axiom_j[guid_UInt64]] << std::endl;
 					}
 
-					if (Axiom_i[RHS] % Axiom_i[LHS] == 0)
+					if (Axiom_i[RHS] % Axiom_j[LHS] == 0)
 					{
 						InAxiomCallGraph_Map.emplace
 						(
@@ -777,9 +799,12 @@ int Prove( // Generate Internal Route Map //
 							BigInt128_t, bool>>
 							{ {Axiom_i[guid_UInt64], { {Axiom_j[guid_UInt64], true} } }}
 						);
+
+						std::cout << "InAxiomCallGraph_Map[\"rhs_reduce\"][Axiom_i[guid_UInt64]][Axiom_j[guid_UInt64]] = " <<
+						std::boolalpha << InAxiomCallGraph_Map["rhs_reduce"][Axiom_i[guid_UInt64]][Axiom_j[guid_UInt64]] << std::endl;
 					}
 
-					if (Axiom_i[RHS] % Axiom_i[RHS] == 0)
+					if (Axiom_i[RHS] % Axiom_j[RHS] == 0)
 					{
 						InAxiomCallGraph_Map.emplace
 						(
@@ -790,13 +815,16 @@ int Prove( // Generate Internal Route Map //
 							BigInt128_t, bool>>
 							{ {Axiom_i[guid_UInt64], { {Axiom_j[guid_UInt64], true} } }}
 						);
+
+						std::cout << "InAxiomCallGraph_Map[\"rhs_expand\"][Axiom_i[guid_UInt64]][Axiom_j[guid_UInt64]] = " <<
+						std::boolalpha << InAxiomCallGraph_Map["rhs_expand"][Axiom_i[guid_UInt64]][Axiom_j[guid_UInt64]] << std::endl;
 					}
 				} // end for (...Axiom_j : Axioms_UInt64Vec)
 			} // end for (...Axiom_i : Axioms_UInt64Vec)
 		};
 
-	constexpr uint64_t MaxAllowedProofs_UInt64{ 1 };
-	uint64_t TotalProofsFound_UInt64{};
+	uint64_t MaxAllowedProofs_UInt64 { 1 };
+	uint64_t TotalProofsFound_UInt64 {};
 
 	std::unordered_map<
 	std::string,
@@ -811,34 +839,33 @@ int Prove( // Generate Internal Route Map //
 	// Prevent next round call loops to improve Performance
 	std::unordered_map<BigInt128_t,
 	std::unordered_map<BigInt128_t, bool>>
-	CallHistory{},
-	NextRoundCallHistory{};
 
-	CallHistory.reserve(100'000); // (Max expected elements, to improve Performance)
+	CallHistory {},
+	NextRoundCallHistory {};
+
+	CallHistory.reserve (100'000); // (Max expected elements for Performance)
 
 	std::priority_queue<
-	std::vector<BigInt128_t>> Tasks_Thread;
+	std::vector<
+	BigInt128_t>> Tasks_Thread;
 
-	Tasks_Thread.push(Theorem_UInt64Vec);
+	Tasks_Thread.push (Theorem_UInt64Vec);
 
 	// Todo: Create a .DLL interface
-	// Todo: Add Boost Multiprecision cpp_int (BigInt) support to support arbitrary length integers, and to offload math operations onto the GPU
 	// Todo: Support Remove and Offline operators for individual axioms
 	// Todo: Add Resume and Suspend Proof operations
 	// Todo: Create a proof statement hash which can be used as a file handle to a proofstep solution when it posts to a file (stateless)
-	// Todo: Guard against stack overflows by offloading unprocessed axiom rewrites onto a deferred thread
+	// Todo: Prevent Tasks_Thread stack overflow by deferring unprocessed axiom rewrites onto a deferred thread
 
-	/*
-	Authorize qualifying axiom subnets by authorizing
-	their netlists in the outbound route map
-	*/
-	int r{};
+	//*** Core Proof Engine (Loop) *** //
 	while (!Tasks_Thread.empty() && !QED)
 	{
 		const std::vector<BigInt128_t>
-			Theorem{ Tasks_Thread.top() };
+		Theorem{ Tasks_Thread.top() };
+
 		Tasks_Thread.pop();
 
+		// Check rewrite proofs in the task queue //
 		const bool TentativeProofFound_Flag = (Theorem[LHS] == Theorem[RHS]);
 		if (TentativeProofFound_Flag)
 		{
@@ -938,11 +965,12 @@ int Prove( // Generate Internal Route Map //
 		}
 		else {
 
+			// Add new rewrites to the task queue //
 			for (const std::vector<BigInt128_t>& Axiom : Axioms_UInt64Vec)
 			{
 				if
 				(
-					AxiomCallGraph_Map["lhs_reduce"][Theorem[last_UInt64]][Axiom[guid_UInt64]] == true &&
+					Theorem[LHS] % Axiom[LHS] == 0 &&
 					CallHistory[Theorem[last_UInt64]][Axiom[guid_UInt64]] == false
 				)
 				{
@@ -953,10 +981,10 @@ int Prove( // Generate Internal Route Map //
 					);
 
 					std::vector<BigInt128_t> Theorem_0000{ Theorem };
+					Theorem_0000[LHS] = Theorem_0000[LHS] / Axiom[LHS] * Axiom[RHS];
 					Theorem_0000[last_UInt64] = Axiom[guid_UInt64];
 					Theorem_0000.emplace_back(0x00); // Push opcode 0x00 onto the proofstack because we performed a _lhs _reduce operation) //
-					Theorem_0000.emplace_back(Axiom[guid_UInt64]); // Push the Axiom ID onto proofstack //
-					Theorem_0000[LHS] = Theorem_0000[LHS] / Axiom[LHS] * Axiom[RHS];
+					Theorem_0000.emplace_back(Axiom[guid_UInt64]); // Push the Axiom ID onto the proofstack //
 					std::cout << "_reduce Module_0000 via Axiom_" << Axiom[guid_UInt64] << " {" << Theorem_0000[LHS] << ", " << Theorem_0000[RHS] << "}" << std::endl;
 
 					Tasks_Thread.push(Theorem_0000);
@@ -964,7 +992,7 @@ int Prove( // Generate Internal Route Map //
 
 				if
 				(
-					AxiomCallGraph_Map["lhs_expand"][Theorem[last_UInt64]][Axiom[guid_UInt64]] == true &&
+					Theorem[LHS] % Axiom[RHS] == 0 &&
 					!CallHistory[Theorem[last_UInt64]][Axiom[guid_UInt64]] == false
 				)
 				{
@@ -975,10 +1003,10 @@ int Prove( // Generate Internal Route Map //
 					);
 
 					std::vector<BigInt128_t> Theorem_0001{ Theorem };
+					Theorem_0001[LHS] = Theorem_0001[LHS] / Axiom[RHS] * Axiom[LHS];
 					Theorem_0001[last_UInt64] = Axiom[guid_UInt64];
 					Theorem_0001.emplace_back(0x01); // Push opcode 0x01 onto the proofstack because we performed a _lhs _expand operation) //
-					Theorem_0001.emplace_back(Axiom[guid_UInt64]); // Push the Axiom ID onto proofstack //
-					Theorem_0001[LHS] = Theorem_0001[LHS] / Axiom[RHS] * Axiom[LHS];
+					Theorem_0001.emplace_back(Axiom[guid_UInt64]); // Push the Axiom ID onto the proofstack //
 					std::cout << "_expand Module_0001 via Axiom_" << Axiom[guid_UInt64] << " {" << Theorem_0001[LHS] << ", " << Theorem_0001[RHS] << "}" << std::endl;
 
 					Tasks_Thread.push(Theorem_0001);
@@ -986,7 +1014,7 @@ int Prove( // Generate Internal Route Map //
 
 				if
 				(
-					AxiomCallGraph_Map["rhs_reduce"][Theorem[last_UInt64]][Axiom[guid_UInt64]] == true &&
+					Theorem[RHS] % Axiom[LHS] == 0 &&
 					!CallHistory[Theorem[last_UInt64]][Axiom[guid_UInt64]] == false
 				)
 				{
@@ -997,10 +1025,10 @@ int Prove( // Generate Internal Route Map //
 					);
 
 					std::vector<BigInt128_t> Theorem_0002{ Theorem };
+					Theorem_0002[RHS] = Theorem_0002[RHS] / Axiom[LHS] * Axiom[RHS];
 					Theorem_0002[last_UInt64] = Axiom[guid_UInt64];
 					Theorem_0002.emplace_back(0x02); // Push opcode 0x02 onto the proofstack because we performed a _rhs _reduce operation) //
-					Theorem_0002.emplace_back(Axiom[guid_UInt64]); // Push the Axiom ID onto proofstack //
-					Theorem_0002[RHS] = Theorem_0002[RHS] / Axiom[LHS] * Axiom[RHS];
+					Theorem_0002.emplace_back(Axiom[guid_UInt64]); // Push the Axiom ID onto the proofstack //
 					std::cout << "_reduce Module_0002 via Axiom_" << Axiom[guid_UInt64] << " {" << Theorem_0002[LHS] << ", " << Theorem_0002[RHS] << "}" << std::endl;
 
 					Tasks_Thread.push(Theorem_0002);
@@ -1008,7 +1036,7 @@ int Prove( // Generate Internal Route Map //
 
 				if
 				(
-					AxiomCallGraph_Map["rhs_expand"][Theorem[last_UInt64]][Axiom[guid_UInt64]] == true &&
+					Theorem[RHS] % Axiom[RHS] == 0 &&
 					!CallHistory[Theorem[last_UInt64]][Axiom[guid_UInt64]] == false
 				)
 				{
@@ -1019,10 +1047,10 @@ int Prove( // Generate Internal Route Map //
 					);
 
 					std::vector<BigInt128_t> Theorem_0003{ Theorem };
+					Theorem_0003[RHS] = Theorem_0003[RHS] / Axiom[RHS] * Axiom[LHS];
 					Theorem_0003[last_UInt64] = Axiom[guid_UInt64];
 					Theorem_0003.emplace_back(0x03); // Push opcode 0x03 onto the proofstack because we performed a _rhs _expand operation) //
-					Theorem_0003.emplace_back(Axiom[guid_UInt64]); // Push the Axiom ID onto proofstack //
-					Theorem_0003[RHS] = Theorem_0003[RHS] / Axiom[RHS] * Axiom[LHS];
+					Theorem_0003.emplace_back(Axiom[guid_UInt64]); // Push the Axiom ID onto the proofstack //
 					std::cout << "_expand Module_0003 via Axiom_" << Axiom[guid_UInt64] << " {" << Theorem_0003[LHS] << ", " << Theorem_0003[RHS] << "}" << std::endl;
 
 					Tasks_Thread.push(Theorem_0003);
@@ -1066,15 +1094,15 @@ int main()
 	Euclid.Axiom
 	(
 		{
-		{"1", "+", "1"}, // 8303
-		{"2"} // 31
+			{"1", "+", "1"}, // 8303
+			{"2"} // 31
 		}
 	);
 	Euclid.Axiom
 	(
 		{
-		{"2", "+", "2"}, // 22103
-		{"4"} // 29
+			{"2", "+", "2"}, // 22103
+			{"4"} // 29
 		}
 	);
 	*/
@@ -1104,10 +1132,10 @@ int main()
 	Euclid.Prove
 	(
 		{
-		{"1", "+", "1", "+", "1", "+", "1"}, // 1585615607
-		{"4"}, // 29
+			{"1", "+", "1", "+", "1", "+", "1"}, // 1585615607
+			{"4"}, // 29
 
-		ProofStep
+			ProofStep
 		}
 	);
 	*/
@@ -1115,8 +1143,8 @@ int main()
 	std::vector<
 	std::string>> Theorem_UInt64Vec =
 	{
-		{"1", "+", "1", "+", "1", "+", "1"}, // 5488
-		{"4"} // 5
+		{"1", "+", "1", "+", "1", "+", "1"}, // 1585615607
+		{"4"} // 29
 	};
 	/*
 	std::promise<int> promise;
@@ -1141,7 +1169,7 @@ int main()
 	const auto duration_chrono = std::chrono::duration_cast<std::chrono::nanoseconds>(end_time_chrono - start_time_chrono).count();
 	std::cout << "Total Duration (nanoseconds): " << duration_chrono << std::endl;
 
-	// Pause screen via request for user-input
+	// Pause progress via request for user-input
 	std::string inChar;
 	std::cin >> inChar;
 
