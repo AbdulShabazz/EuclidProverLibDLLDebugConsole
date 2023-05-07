@@ -74,7 +74,7 @@
     <RunCodeAnalysis>false</RunCodeAnalysis>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
     <ExternalIncludePath>$(ExternalIncludePath)</ExternalIncludePath>
-    <IncludePath>$(IncludePath)</IncludePath>
+    <IncludePath>$(LocalDebuggerWorkingDirectory);$(IncludePath)</IncludePath>
     <PublicIncludeDirectories>$(PublicIncludeDirectories)</PublicIncludeDirectories>
     <ExcludePath>$(ExcludePath)</ExcludePath>
   </PropertyGroup>
@@ -82,7 +82,7 @@
     <RunCodeAnalysis>false</RunCodeAnalysis>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
     <ExternalIncludePath>$(ExternalIncludePath)</ExternalIncludePath>
-    <IncludePath>$(IncludePath)</IncludePath>
+    <IncludePath>$(LocalDebuggerWorkingDirectory);$(IncludePath)</IncludePath>
     <PublicIncludeDirectories>$(PublicIncludeDirectories)</PublicIncludeDirectories>
     <ExcludePath>$(ExcludePath)</ExcludePath>
   </PropertyGroup>
