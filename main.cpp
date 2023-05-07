@@ -13,6 +13,7 @@
 	for use in the Unreal Engine 5.2 Core in-game Framework.
 
   C++23 UPDATES
+	+ BigInt (boost) support 
 	+ Prime(k++) ==> Prime([k++])
 	+ std::unordered_map ('symbol' == 'SYMBOL') ==> std::unordered_multimap ('symbol' != 'SYMBOL')
 	+ Lockless stack manager: RecursionLimiter (Eliminates mutex/semaphore Performance penalty)
@@ -46,17 +47,17 @@
 	the "IsIn" operator may or may not link unrelated categories, indefinitely;
 	whereas: "{ PlayerCharacterSideKick } IsIn_StyxBoat " is safer and guaranteed to converge.
 
+  Note: The rewrite engine considerers one or more symbols enclosed within curly braces and or brackets as a scoped variable hint, which can be replaced.
+
   Usage example (pseudo code).
+
+	( { a } plus { b } ) raised { 2 } = { { c } raised { 2 } } plus { 2ab }
 
 	{ { a } raised { 2 } } plus { 2ab } plus { b raised { 2 } } <== ( { a } plus { b } ) raised { 2 }
 	( { a } plus { b } ) raised { 2 } minus { 2ab } = { c } raised { 2 } <== ( { a } plus { b } ) raised { 2 } = { { c } raised { 2 } } plus { 2ab }
 	{ { a } raised { 2 } } plus { 2ab } minus { 2ab } plus { b raised { 2 } } ==> { { a } raised { 2 } } plus { { b } raised { 2 } }
 
-	( { a } plus { b } ) raised { 2 } = { { c } raised { 2 } } plus { 2ab }
-
 	Prove { { a } raised { 2 } } plus { { b } raised { 2 } } = { c } raised { 2 }
-
-  Note: The rewrite engine considerers anything enclosed within curly braces and or brackets as a scoped variable hint, which can be replaced.
 
   Usage Example (pseudo code).
 
@@ -71,13 +72,13 @@
 	.
 	{ PlayerCharacterSideKick } IsIn { QuadUtilityVehicle } = { QuadUtilityVehicle } and { VehicleDriveDisabled }
 
-	// Rewrite Lemmas
+	// Lemmas
 	{ PlayerCharacterSideKick } IsIn { StyxBoat } <== { StyxBoat } IsNotIn { StyxRiver } // These are connectives, and axiom helpers
 	{ PlayerCharacterSideKick } IsOn { Vehicle } <== { VehicleDriveDisabled }
 	{ PlayerCharacterSideKick } IsIn { Vehicle { QuadUtilityVehicle } } <== { PlayerCharacterSideKick } IsIn { QuadUtilityVehicle }
 	{ PlayerCharacterSideKick } IsNotIn { StyxBoat } ==> { StyxBoat } IsNotIn { StyxRiver }
 
-	// The to prove
+	// Theorem to prove
 	Prove { PlayerCharacterSideKick } IsIn { QuadUtilityVehicle } = { QuadUtilityVehicle } and { VehicleDriveDisabled }
 
 	// Proof-Steps (Output)
@@ -146,7 +147,7 @@
 
 		Euclid.Lemma
 		(
-			// Lemma rewrite helper 00
+			// Lemma (rewrite helper) 00
 			{
 				{ "{", "PlayerCharacterSideKick", "}", "IsIn", "{", "StyxBoat", "}" }, // lhs
 				{ "{", "StyxBoat", "}", "IsNotIn", "{", "StyxRiver", "}" } // rhs
@@ -200,7 +201,6 @@
 
 #include <iostream>
 #include <thread>
-#include <cstdint>
 #include <cstdlib>
 #include <chrono>
 #include <vector>
@@ -344,7 +344,9 @@ BigInt128_t Prime()
 	return PrimeComposite_UInt64Vec[Index_UInt64];
 }
 
-int Prove( // Generate Internal Route Map //
+// Generate Internal Route Map //
+int Prove
+( 
 	const
 	std::vector<
 	std::vector<
@@ -359,7 +361,8 @@ int Prove( // Generate Internal Route Map //
 	std::vector<
 	std::vector<
 	std::vector<
-	std::string>>>>&OutProofStep_StdStrVec)
+	std::string>>>>& OutProofStep_StdStrVec
+)
 {
 
 	TempProofSteps = {};
@@ -834,7 +837,7 @@ int Prove( // Generate Internal Route Map //
 	BigInt128_t, bool>>> AxiomCallGraph_Map;
 
 	// Populate access lists
-	PopulateAxiomCallGraph(AxiomCallGraph_Map);
+	//PopulateAxiomCallGraph(AxiomCallGraph_Map);
 
 	// Prevent next round call loops to improve Performance
 	std::unordered_map<BigInt128_t,
@@ -843,7 +846,7 @@ int Prove( // Generate Internal Route Map //
 	CallHistory {},
 	NextRoundCallHistory {};
 
-	CallHistory.reserve (100'000); // (Max expected elements for Performance)
+	//CallHistory.reserve (100'000); // (Max expected elements for Performance)
 
 	std::priority_queue<
 	std::vector<
@@ -879,6 +882,7 @@ int Prove( // Generate Internal Route Map //
 			*/
 
 			std::cout << "Tentative Proof Found" << std::endl;
+			std::cout << "Theorem {" << Theorem[LHS] << ", " << Theorem[RHS] << "} " << std::endl;
 
 			bool ProofFound_Flag { true };
 
@@ -888,9 +892,9 @@ int Prove( // Generate Internal Route Map //
 			(
 				uint64_t ProofStep_UInt64 = ProofStack_UInt64;
 				ProofStep_UInt64 < Theorem.size();
-				++ProofStep_UInt64
+				ProofStep_UInt64 += 2
 			)
-			{
+			{/*
 				if
 				(
 					!RewriteInstruction_Map
@@ -900,8 +904,25 @@ int Prove( // Generate Internal Route Map //
 				{
 					ProofFound_Flag = false;
 					break;
+				}*/
+
+				switch (uint64_t{ Theorem[ProofStep_UInt64] })
+				{
+					case 0x00:
+						std::cout << "lhs_reduce via "; break;
+					case 0x01:
+						std::cout << "lhs_expand via "; break;
+					case 0x02:
+						std::cout << "rhs_reduce via "; break;
+					case 0x03:
+						std::cout << "rhs_expand via "; break;
 				}
+
+				std::cout << "Axiom_" << Theorem[ProofStep_UInt64 + 1] << std::endl;
 			}
+
+			QED = true;
+			break;
 
 			if (ProofFound_Flag)
 			{
@@ -970,19 +991,20 @@ int Prove( // Generate Internal Route Map //
 			{
 				if
 				(
-					Theorem[LHS] % Axiom[LHS] == 0 &&
-					CallHistory[Theorem[last_UInt64]][Axiom[guid_UInt64]] == false
+					Theorem[LHS] % Axiom[LHS] == 0
+					/*AxiomCallGraph_Map["lhs_reduce"][Theorem[last_UInt64]][Axiom[guid_UInt64]] == true /* &&
+					CallHistory[Theorem[last_UInt64]][Axiom[guid_UInt64]] == false*/
 				)
-				{
+				{/*
 					NextRoundCallHistory.emplace
 					(
 						Theorem[last_UInt64],
 						std::unordered_map<BigInt128_t, bool>{ {Axiom[guid_UInt64], true}}
-					);
+					);*/
 
 					std::vector<BigInt128_t> Theorem_0000{ Theorem };
 					Theorem_0000[LHS] = Theorem_0000[LHS] / Axiom[LHS] * Axiom[RHS];
-					Theorem_0000[last_UInt64] = Axiom[guid_UInt64];
+					//Theorem_0000[last_UInt64] = Axiom[guid_UInt64];
 					Theorem_0000.emplace_back(0x00); // Push opcode 0x00 onto the proofstack because we performed a _lhs _reduce operation) //
 					Theorem_0000.emplace_back(Axiom[guid_UInt64]); // Push the Axiom ID onto the proofstack //
 					std::cout << "_reduce Module_0000 via Axiom_" << Axiom[guid_UInt64] << " {" << Theorem_0000[LHS] << ", " << Theorem_0000[RHS] << "}" << std::endl;
@@ -992,19 +1014,20 @@ int Prove( // Generate Internal Route Map //
 
 				if
 				(
-					Theorem[LHS] % Axiom[RHS] == 0 &&
-					!CallHistory[Theorem[last_UInt64]][Axiom[guid_UInt64]] == false
+					Theorem[LHS] % Axiom[RHS] == 0
+					/*AxiomCallGraph_Map["lhs_expand"][Theorem[last_UInt64]][Axiom[guid_UInt64]] == true /*&&
+					!CallHistory[Theorem[last_UInt64]][Axiom[guid_UInt64]] == false*/
 				)
-				{
+				{/*
 					NextRoundCallHistory.emplace
 					(
 						Theorem[last_UInt64],
 						std::unordered_map<BigInt128_t, bool>{ {Axiom[guid_UInt64], true}}
-					);
+					);*/
 
 					std::vector<BigInt128_t> Theorem_0001{ Theorem };
 					Theorem_0001[LHS] = Theorem_0001[LHS] / Axiom[RHS] * Axiom[LHS];
-					Theorem_0001[last_UInt64] = Axiom[guid_UInt64];
+					//Theorem_0001[last_UInt64] = Axiom[guid_UInt64];
 					Theorem_0001.emplace_back(0x01); // Push opcode 0x01 onto the proofstack because we performed a _lhs _expand operation) //
 					Theorem_0001.emplace_back(Axiom[guid_UInt64]); // Push the Axiom ID onto the proofstack //
 					std::cout << "_expand Module_0001 via Axiom_" << Axiom[guid_UInt64] << " {" << Theorem_0001[LHS] << ", " << Theorem_0001[RHS] << "}" << std::endl;
@@ -1014,19 +1037,20 @@ int Prove( // Generate Internal Route Map //
 
 				if
 				(
-					Theorem[RHS] % Axiom[LHS] == 0 &&
-					!CallHistory[Theorem[last_UInt64]][Axiom[guid_UInt64]] == false
+					Theorem[RHS] % Axiom[LHS] == 0
+					/*AxiomCallGraph_Map["rhs_reduce"][Theorem[last_UInt64]][Axiom[guid_UInt64]] == true /*&&
+					!CallHistory[Theorem[last_UInt64]][Axiom[guid_UInt64]] == false*/
 				)
-				{
+				{/*
 					NextRoundCallHistory.emplace
 					(
 						Theorem[last_UInt64],
 						std::unordered_map<BigInt128_t, bool>{ {Axiom[guid_UInt64], true}}
-					);
+					);*/
 
 					std::vector<BigInt128_t> Theorem_0002{ Theorem };
 					Theorem_0002[RHS] = Theorem_0002[RHS] / Axiom[LHS] * Axiom[RHS];
-					Theorem_0002[last_UInt64] = Axiom[guid_UInt64];
+					//Theorem_0002[last_UInt64] = Axiom[guid_UInt64];
 					Theorem_0002.emplace_back(0x02); // Push opcode 0x02 onto the proofstack because we performed a _rhs _reduce operation) //
 					Theorem_0002.emplace_back(Axiom[guid_UInt64]); // Push the Axiom ID onto the proofstack //
 					std::cout << "_reduce Module_0002 via Axiom_" << Axiom[guid_UInt64] << " {" << Theorem_0002[LHS] << ", " << Theorem_0002[RHS] << "}" << std::endl;
@@ -1036,26 +1060,27 @@ int Prove( // Generate Internal Route Map //
 
 				if
 				(
-					Theorem[RHS] % Axiom[RHS] == 0 &&
-					!CallHistory[Theorem[last_UInt64]][Axiom[guid_UInt64]] == false
+					Theorem[RHS] % Axiom[RHS] == 0
+					/*AxiomCallGraph_Map["rhs_expand"][Theorem[last_UInt64]][Axiom[guid_UInt64]] == true /*&&
+					!CallHistory[Theorem[last_UInt64]][Axiom[guid_UInt64]] == false*/
 				)
-				{
+				{/*
 					NextRoundCallHistory.emplace
 					(
 						Theorem[last_UInt64],
 						std::unordered_map<BigInt128_t, bool>{ {Axiom[guid_UInt64], true}}
-					);
+					);*/
 
 					std::vector<BigInt128_t> Theorem_0003{ Theorem };
 					Theorem_0003[RHS] = Theorem_0003[RHS] / Axiom[RHS] * Axiom[LHS];
-					Theorem_0003[last_UInt64] = Axiom[guid_UInt64];
+					//Theorem_0003[last_UInt64] = Axiom[guid_UInt64];
 					Theorem_0003.emplace_back(0x03); // Push opcode 0x03 onto the proofstack because we performed a _rhs _expand operation) //
 					Theorem_0003.emplace_back(Axiom[guid_UInt64]); // Push the Axiom ID onto the proofstack //
 					std::cout << "_expand Module_0003 via Axiom_" << Axiom[guid_UInt64] << " {" << Theorem_0003[LHS] << ", " << Theorem_0003[RHS] << "}" << std::endl;
 
 					Tasks_Thread.push(Theorem_0003);
 				}
-				CallHistory = NextRoundCallHistory;
+				//CallHistory = NextRoundCallHistory;
 				std::cout << std::endl;
 			} // end for (...Axiom : InAxioms_UInt64Vec)
 		} // end test (...Theorem[LHS] == Theorem[RHS])
@@ -1097,14 +1122,14 @@ int main()
 			{"1", "+", "1"}, // 8303
 			{"2"} // 31
 		}
-	);
+	)
 	Euclid.Axiom
 	(
 		{
 			{"2", "+", "2"}, // 22103
 			{"4"} // 29
 		}
-	);
+	)
 	*/
 	std::vector<
 	std::vector<
@@ -1137,7 +1162,7 @@ int main()
 
 			ProofStep
 		}
-	);
+	)
 	*/
 	std::vector<
 	std::vector<
@@ -1165,6 +1190,7 @@ int main()
 
 	// bProofFound_FlagFuture.get();
 
+	std::cout << std::endl;
 	const auto end_time_chrono = std::chrono::high_resolution_clock::now();
 	const auto duration_chrono = std::chrono::duration_cast<std::chrono::nanoseconds>(end_time_chrono - start_time_chrono).count();
 	std::cout << "Total Duration (nanoseconds): " << duration_chrono << std::endl;
