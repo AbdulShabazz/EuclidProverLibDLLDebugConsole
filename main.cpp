@@ -64,13 +64,22 @@ int main()
 	);
 	*/
 
+
+
 	std::vector<
 	std::vector<
 	std::vector<
 	std::vector<
 	std::string>>>>
-	ProofStep_4DStdStrVec,
-	AxiomCommitLog_4DStdStrVec;
+
+	// Instantiate ProofStep_4DStdStrVec[line][step][lhs/rhs][token]
+	ProofStep_4DStdStrVec;
+
+	std::vector<
+	std::string>
+
+	// Instantiate AxiomCommitLog_StdStrVec[step]
+	AxiomCommitLog_StdStrVec;
 
 	const auto start_time_chrono = std::chrono::high_resolution_clock::now();
 	
@@ -84,7 +93,7 @@ int main()
 		},
 
 		ProofStep_4DStdStrVec,
-		AxiomCommitLog_4DStdStrVec
+		AxiomCommitLog_StdStrVec
 	);
 
 	/*
