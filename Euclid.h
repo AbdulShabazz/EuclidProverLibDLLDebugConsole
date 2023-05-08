@@ -296,13 +296,18 @@ namespace Euclid_Prover
 		const
 		std::vector<
 		std::vector<
-		std::string>>&InTheorem_UInt64Vec,
+		std::string>>&
+		InTheorem_UInt64Vec,
 
 		const
 		std::vector<
 		std::vector<
 		std::vector<
-		std::string>>>& InAxioms_UInt64Vec,
+		std::string>>>&
+		InAxioms_UInt64Vec,
+
+		bool&
+		OutProofFound_FlagRef,
 
 		/*std::future<bool>& OutProofFound_PromiseFlag,*/
 
@@ -310,7 +315,13 @@ namespace Euclid_Prover
 		std::vector<
 		std::vector<
 		std::vector<
-		std::string>>>>&OutProofStep_StdStrVec
+		std::string>>>>&
+		OutProofStep_StdStrVecRef,
+
+		std::vector<
+		std::vector<
+		std::string>>&
+		OutAxiomCommitLog_StdStrVecRef
 	)
 	{
 
@@ -319,11 +330,6 @@ namespace Euclid_Prover
 		bool QED {};
 
 		BigInt128_t GUID_UInt64{};
-
-		/*
-		token: [ "1" "2" "4" "+" ]
-		prime: [  2   3   5   7 ]
-		*/
 
 		std::vector<BigInt128_t> Theorem_UInt64Vec;
 
@@ -1048,6 +1054,8 @@ namespace Euclid_Prover
 
 		//OutProofFound_PromiseFlag.set_value(QED);
 
+		OutProofFound_FlagRef = QED;
+
 		return EXIT_SUCCESS;
 	}
 
@@ -1089,11 +1097,11 @@ namespace Euclid_Prover
 		static std::vector<std::string> Elide(const std::vector<std::string>& input)
 		{
 			static_assert(std::is_same_v<decltype(type), BracketType>, "Invalid bracket type");
-			const char openBrace = BracketTraits<type>::Open;
-			const char closeBrace = BracketTraits<type>::Close;
+			const std::string& openBrace = BracketTraits<type>::Open;
+			const std::string& closeBrace = BracketTraits<type>::Close;
 			std::vector<std::string> output;
 			bool OpenScopeFlag = false;
-			for (char c : input)
+			for (const std::string& c : input)
 			{
 				if (c == openBrace)
 				{
@@ -1237,11 +1245,11 @@ namespace Euclid_Prover
 		)
 		{
 			const
-				std::vector<
-				std::vector<
-				std::vector<
-				std::string>>>&
-				TempInAxiomsConstStdStrVecRef{ InAxiomInitListConstStdStringRef };
+			std::vector<
+			std::vector<
+			std::vector<
+			std::string>>>&
+			TempInAxiomsConstStdStrVecRef{ InAxiomInitListConstStdStringRef };
 
 			return Axioms(TempInAxiomsConstStdStrVecRef);
 		}
@@ -1290,11 +1298,11 @@ namespace Euclid_Prover
 			const
 			std::initializer_list<
 			std::string>&
-			InLemmaInitListConstCharRef
+			InLemmaConstStdStrInitListRef
 		)
 		{
-			const std::vector<std::string>& InLemmaVecConstCharRef{ InLemmaInitListConstCharRef };
-			return Lemma(InLemmaVecConstCharRef);
+			const std::vector<std::string>& InLemmaConstStdStrVecRef { InLemmaConstStdStrInitListRef };
+			return Lemma(InLemmaConstStdStrVecRef);
 		}
 
 		bool Lemmas
@@ -1325,9 +1333,9 @@ namespace Euclid_Prover
 				std::vector<
 				std::vector<
 				std::string>>>&
-				TempInLemmasConstStdStrVec{ InLemmasInitListConstStdStrVec };
+				TempInLemmasConstStdStrVecRef { InLemmasInitListConstStdStrVec };
 
-			return Lemmas(TempInLemmasConstStdStrVec);
+			return Lemmas(TempInLemmasConstStdStrVecRef);
 		}
 
 		bool Prove
@@ -1343,10 +1351,15 @@ namespace Euclid_Prover
 			std::vector<
 			std::vector<
 			std::string>>>>&
-			OutPath4DStdStrVecRef
+			OutPath4DStdStrVecRef,
+
+			std::vector<
+			std::vector<
+			std::string>>&
+			OutAxiomCommitLog_StdStrVecRef
 		)
 		{
-			bool TentativeProofFoundFlag = true;
+			bool ProofFoundFlag = true;
 
 			/*
 			Reset();
@@ -1377,15 +1390,17 @@ namespace Euclid_Prover
 				__Prove__,
 				std::cref(Theorem_UInt64Vec),
 				std::cref(Axioms_UInt64Vec),
+				std::ref(ProofFoundFlag),
 				/*std::ref(promise),*/
-				std::ref(ProofStep_4DStdStrVec)
+				std::ref(ProofStep_4DStdStrVec),
+				std::ref(OutAxiomCommitLog_StdStrVecRef)
 			);
 
 			th.join();
 
 			// bProofFound_FlagFuture.get();
 
-			return TentativeProofFoundFlag;
+			return ProofFoundFlag;
 		}
 
 		bool Prove
@@ -1401,16 +1416,26 @@ namespace Euclid_Prover
 			std::vector<
 			std::vector<
 			std::string>>>>&
-			OutPath4DStdStrVecRef
+			OutPath4DStdStrVecRef,
+
+			std::vector<
+			std::vector<
+			std::string>>&
+			OutAxiomCommitLog_StdStrVecRef
 		)
 		{
 			const
-				std::vector<
-				std::vector<
-				std::string>>&
-				InProofVecConstCharRef{ InProofInitListConstCharRef };
+			std::vector<
+			std::vector<
+			std::string>>&
+			InProofVecConstCharRef { InProofInitListConstCharRef };
 
-			return Prove(InProofVecConstCharRef, OutPath4DStdStrVecRef);
+			return Prove 
+			(
+				InProofVecConstCharRef,
+				OutPath4DStdStrVecRef,
+				OutAxiomCommitLog_StdStrVecRef
+			);
 		}
 
 	private:
@@ -1419,22 +1444,22 @@ namespace Euclid_Prover
 		const std::string _closeBrace;
 
 		std::vector<
-			std::vector<
-			std::vector<
-			std::string>>>
-			Axioms_UInt64Vec{};
+		std::vector<
+		std::vector<
+		std::string>>>
+		Axioms_UInt64Vec{};
 
 		std::vector<
-			std::vector<
-			std::string>>
-			Theorem_UInt64Vec{};
+		std::vector<
+		std::string>>
+		Theorem_UInt64Vec{};
 
 		std::vector<
-			std::vector<
-			std::vector<
-			std::vector<
-			std::string>>>>
-			ProofStep_4DStdStrVec{};
+		std::vector<
+		std::vector<
+		std::vector<
+		std::string>>>>
+		ProofStep_4DStdStrVec{};
 	};
 
 	template<>
