@@ -20,9 +20,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\EuclidProverLibDLL\EuclidProverLibDLL.h">
-      <Filter>Public</Filter>
-    </ClInclude>
     <ClInclude Include="..\EuclidProverLibDLL\TestCases.h">
       <Filter>Public</Filter>
     </ClInclude>
