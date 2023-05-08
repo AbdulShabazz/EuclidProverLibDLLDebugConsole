@@ -855,7 +855,7 @@ int Prove
 	Tasks_Thread.push (Theorem_UInt64Vec);
 
 	// Todo: Create a .DLL interface
-	// Todo: Support Remove and Offline operators for individual axioms
+	// Todo: Support Remove and SendOffline operations for individual axioms
 	// Todo: Add Resume and Suspend Proof operations
 	// Todo: Create a proof statement hash which can be used as a file handle to a proofstep solution when it posts to a file (stateless)
 	// Todo: Prevent Tasks_Thread stack overflow by deferring unprocessed axiom rewrites onto a deferred thread
