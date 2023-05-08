@@ -13,6 +13,13 @@
 	Theorem prover written in C++23. Ported from ECMA-262 JavaScript (A grammar reduction term-rewriting system)
 	for use in the Unreal Engine 5.2 Core in-game Framework.
 
+	 The following #ifdef EUCLIDPROVERLIBDLL_EXPORTS block is the standard way of creating macros which make exporting
+	 from a DLL simpler. All files within this DLL are compiled with the EUCLIDPROVERLIBDLL_EXPORTS
+	 symbol defined on the command line. This symbol should NOT be defined on any project
+	 that calls this DLL. This way any other project whose source files include this file see
+	 API_EXPORT functions as being imported from a DLL, whereas this DLL sees symbols
+	 defined with this macro as being exported.
+
   C++23 UPDATES
 	+ BigInt (boost) support
 	+ Prime(k++) ==> Prime([k++])
@@ -105,7 +112,7 @@
 		// Instantiate Prover (module)
 		EuclidProver<BracketType::CurlyBraces> Euclid;
 
-		Euclid.Axiom
+		Euclid.Axioms
 		(
 			{
 				// Axiom_00
@@ -146,7 +153,7 @@
 			}
 		);
 
-		Euclid.Lemma
+		Euclid.Lemmas
 		(
 			// Lemma (rewrite helper) 00
 			{
@@ -200,6 +207,12 @@
 
 */
 
+#ifdef EUCLIDPROVERLIBDLL_EXPORTS
+#define API_EXPORT __declspec(dllexport)
+#else
+#define API_EXPORT __declspec(dllimport)
+#endif
+
 #include <iostream>
 #include <thread>
 #include <vector>
@@ -210,7 +223,7 @@
 #include <functional>
 #include <future>
 #include <limits>
-#include <boost/multiprecision/cpp_int.hpp>
+#include <boost/multiprecision/cpp_int.hpp> 
 
 namespace Euclid_Prover
 {
@@ -284,12 +297,15 @@ namespace Euclid_Prover
 		std::vector<
 		std::vector<
 		std::string>>&InTheorem_UInt64Vec,
+
 		const
 		std::vector<
 		std::vector<
 		std::vector<
 		std::string>>>& InAxioms_UInt64Vec,
+
 		/*std::future<bool>& OutProofFound_PromiseFlag,*/
+
 		std::vector<
 		std::vector<
 		std::vector<
@@ -300,7 +316,7 @@ namespace Euclid_Prover
 
 		TempProofSteps = {};
 
-		bool QED{};
+		bool QED {};
 
 		BigInt128_t GUID_UInt64{};
 
@@ -1035,7 +1051,7 @@ namespace Euclid_Prover
 		return EXIT_SUCCESS;
 	}
 
-	enum class /*API_EXPORT*/ BracketType { CurlyBraces, SquareBrackets, Parentheses };
+	enum class API_EXPORT BracketType { CurlyBraces, SquareBrackets, Parentheses };
 
 	template <BracketType type>
 	struct BracketTraits {};
@@ -1061,7 +1077,7 @@ namespace Euclid_Prover
 		static constexpr std::string Close = ")";
 	};
 
-	class /*API_EXPORT*/ CurlyBraceElide
+	class API_EXPORT CurlyBraceElide
 	{
 	public:
 		/**
@@ -1115,10 +1131,10 @@ namespace Euclid_Prover
 	};
 
 	template<BracketType EuclidBracket>
-	class /*API_EXPORT*/ EuclidProver;
+	class API_EXPORT EuclidProver;
 
 	template<>
-	class /*API_EXPORT*/ EuclidProver<BracketType::CurlyBraces>
+	class API_EXPORT EuclidProver<BracketType::CurlyBraces>
 	{
 	public:
 		explicit EuclidProver
@@ -1221,13 +1237,13 @@ namespace Euclid_Prover
 		)
 		{
 			const
-			std::vector<
-			std::vector<
-			std::vector<
-			std::string>>>&
-			TempInAxiomsConstStdStrVecRef {InAxiomInitListConstStdStringRef};
+				std::vector<
+				std::vector<
+				std::vector<
+				std::string>>>&
+				TempInAxiomsConstStdStrVecRef{ InAxiomInitListConstStdStringRef };
 
-			return Axioms (TempInAxiomsConstStdStrVecRef);
+			return Axioms(TempInAxiomsConstStdStrVecRef);
 		}
 
 		bool Lemma
@@ -1305,13 +1321,13 @@ namespace Euclid_Prover
 		)
 		{
 			const
-			std::vector<
-			std::vector<
-			std::vector<
-			std::string>>>&
-			TempInLemmasConstStdStrVec{ InLemmasInitListConstStdStrVec };
+				std::vector<
+				std::vector<
+				std::vector<
+				std::string>>>&
+				TempInLemmasConstStdStrVec{ InLemmasInitListConstStdStrVec };
 
-			return Lemmas (TempInLemmasConstStdStrVec);
+			return Lemmas(TempInLemmasConstStdStrVec);
 		}
 
 		bool Prove
@@ -1320,21 +1336,14 @@ namespace Euclid_Prover
 			std::vector<
 			std::vector<
 			std::string>>&
-			InProof2DVecConstStdStrRef,
+			InProofVecConstCharRef,
 
 			std::vector<
 			std::vector<
 			std::vector<
 			std::vector<
 			std::string>>>>&
-			OutProof4DStdStrVecRef,
-
-			std::vector<
-			std::vector<
-			std::vector<
-			std::vector<
-			std::string>>>>&
-			OutAxiomCommitLog4DStdStrVecRef
+			OutPath4DStdStrVecRef
 		)
 		{
 			bool TentativeProofFoundFlag = true;
@@ -1368,10 +1377,8 @@ namespace Euclid_Prover
 				__Prove__,
 				std::cref(Theorem_UInt64Vec),
 				std::cref(Axioms_UInt64Vec),
-				/*std::ref(Lemmas_UInt64Vec),*/
 				/*std::ref(promise),*/
 				std::ref(ProofStep_4DStdStrVec)
-				/*, std::ref(OutAxiomCommitLog4DStdStrVecRef)*/
 			);
 
 			th.join();
@@ -1387,30 +1394,23 @@ namespace Euclid_Prover
 			std::initializer_list<
 			std::vector<
 			std::string>>&
-			InProofInitListConstStdStrRef,
+			InProofInitListConstCharRef,
 
 			std::vector<
 			std::vector<
 			std::vector<
 			std::vector<
 			std::string>>>>&
-			OutProof4DStdStrVecRef,
-
-			std::vector<
-			std::vector<
-			std::vector<
-			std::vector<
-			std::string>>>>&
-			OutAxiomCommitLog4DStdStrVecRef
+			OutPath4DStdStrVecRef
 		)
 		{
 			const
-			std::vector<
-			std::vector<
-			std::string>>&
-			InProofVecConstStdStrRef { InProofInitListConstStdStrRef };
+				std::vector<
+				std::vector<
+				std::string>>&
+				InProofVecConstCharRef{ InProofInitListConstCharRef };
 
-			return Prove (InProofVecConstStdStrRef, OutProof4DStdStrVecRef, OutAxiomCommitLog4DStdStrVecRef);
+			return Prove(InProofVecConstCharRef, OutPath4DStdStrVecRef);
 		}
 
 	private:
@@ -1419,32 +1419,26 @@ namespace Euclid_Prover
 		const std::string _closeBrace;
 
 		std::vector<
-		std::vector<
-		std::vector<
-		std::string>>>
-		Axioms_UInt64Vec {};
+			std::vector<
+			std::vector<
+			std::string>>>
+			Axioms_UInt64Vec{};
 
 		std::vector<
-		std::vector<
-		std::vector<
-		std::string>>>
-		Lemmas_UInt64Vec {};
+			std::vector<
+			std::string>>
+			Theorem_UInt64Vec{};
 
 		std::vector<
-		std::vector<
-		std::string>>
-		Theorem_UInt64Vec {};
-
-		std::vector<
-		std::vector<
-		std::vector<
-		std::vector<
-		std::string>>>>
-		ProofStep_4DStdStrVec {};
+			std::vector<
+			std::vector<
+			std::vector<
+			std::string>>>>
+			ProofStep_4DStdStrVec{};
 	};
 
 	template<>
-	class /*API_EXPORT*/ EuclidProver<BracketType::Parentheses> : public EuclidProver<BracketType::CurlyBraces>
+	class API_EXPORT EuclidProver<BracketType::Parentheses> : public EuclidProver<BracketType::CurlyBraces>
 	{
 	public:
 		EuclidProver() noexcept : EuclidProver<BracketType::CurlyBraces>("(", ")")
@@ -1454,7 +1448,7 @@ namespace Euclid_Prover
 	};
 
 	template<>
-	class /*API_EXPORT*/ EuclidProver<BracketType::SquareBrackets> : public EuclidProver<BracketType::CurlyBraces>
+	class API_EXPORT EuclidProver<BracketType::SquareBrackets> : public EuclidProver<BracketType::CurlyBraces>
 	{
 	public:
 		EuclidProver() noexcept : EuclidProver<BracketType::CurlyBraces>("[", "]")
@@ -1463,3 +1457,8 @@ namespace Euclid_Prover
 		}
 	};
 }
+
+using EuclidProverClass =
+
+Euclid_Prover::EuclidProver<
+Euclid_Prover::BracketType::CurlyBraces>;
