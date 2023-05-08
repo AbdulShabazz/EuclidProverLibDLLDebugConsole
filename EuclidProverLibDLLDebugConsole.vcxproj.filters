@@ -26,6 +26,9 @@
     <ClInclude Include="..\EuclidProverLibDLL\TestCases.h">
       <Filter>Public</Filter>
     </ClInclude>
+    <ClInclude Include="Euclid.h">
+      <Filter>Private</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Library Include="..\EuclidProverLibDLL\x64\Release\EuclidProverLibDLL.lib">
