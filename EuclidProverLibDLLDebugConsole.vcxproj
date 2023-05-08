@@ -176,6 +176,7 @@
   <ItemGroup>
     <ClInclude Include="..\EuclidProverLibDLL\EuclidProverLibDLL.h" />
     <ClInclude Include="..\EuclidProverLibDLL\TestCases.h" />
+    <ClInclude Include="Euclid.h" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="..\EuclidProverLibDLL\x64\Release\EuclidProverLibDLL.lib" />
