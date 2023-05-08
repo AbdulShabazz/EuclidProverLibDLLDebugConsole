@@ -15,7 +15,27 @@ int main()
 	// Instantiate Prover (module)
 	EuclidProverClass Euclid;
 
+	Euclid.Axioms
+	(
+		{
+			// Axiom_1
+			{
+				{"1", "+", "1"}, // (lhs) Prime Composite: 8303 //
+				{"2"} // (rhs) Prime Composite: 31 //
+			},
+
+			// Axiom_2
+			{
+				{"2", "+", "2"}, // (lhs) Prime Composite: 22103 //
+				{"4"} // (rhs) Prime Composite: 29 //
+			}
+		}
+	);
+
 	/*
+
+	// OR...
+
 	Euclid.Axiom
 	(
 		// Axiom_1
@@ -35,55 +55,25 @@ int main()
 	);
 	*/
 
-	Euclid.Axioms
-	(
-		{
-			// Axiom_1
-			{
-				{"1", "+", "1"}, // (lhs) Prime Composite: 8303 //
-				{"2"} // (rhs) Prime Composite: 31 //
-			},
-
-			// Axiom_2
-			{
-				{"2", "+", "2"}, // (lhs) Prime Composite: 22103 //
-				{"4"} // (rhs) Prime Composite: 29 //
-			}
-		}
-	);
-
-	/*
-	Euclid.Lemma
-	(
-
-	);
-
-	Euclid.Lemmas
-	(
-
-	);
-	*/
-
-
-
 	std::vector<
 	std::vector<
 	std::vector<
 	std::vector<
 	std::string>>>>
 
-	// Instantiate ProofStep_4DStdStrVec[line][step][lhs/rhs][token]
+	// Instantiate ProofStep_4DStdStrVec[proof][step][lhs/rhs][token]
 	ProofStep_4DStdStrVec;
 
 	std::vector<
-	std::string>
+	std::vector<
+	std::string>>
 
-	// Instantiate AxiomCommitLog_StdStrVec[step]
+	// Instantiate AxiomCommitLog_StdStrVec[proof][step]
 	AxiomCommitLog_StdStrVec;
 
 	const auto start_time_chrono = std::chrono::high_resolution_clock::now();
 	
-	const bool TentativeProofFound_Flag = 
+	const bool ProofFound_Flag = 
 
 	Euclid.Prove
 	(
@@ -97,7 +87,7 @@ int main()
 	);
 
 	/*
-	if (TentativeProofFound_Flag)
+	if (ProofFound_Flag)
 	{
 		std::cout << "Proof Found." << std::endl;
 		ProofStep_4DStdStrVec;
@@ -114,7 +104,7 @@ int main()
 	const auto duration_chrono = std::chrono::duration_cast<std::chrono::nanoseconds>(end_time_chrono - start_time_chrono).count();
 	std::cout << "Total Duration (nanoseconds): " << duration_chrono << std::endl;
 
-	// Hold for user-input
+	// Hold for user-input //
 	std::string inChar;
 	std::cin >> inChar;
 
