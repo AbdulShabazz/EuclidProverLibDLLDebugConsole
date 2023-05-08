@@ -174,7 +174,6 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\EuclidProverLibDLL\EuclidProverLibDLL.h" />
     <ClInclude Include="..\EuclidProverLibDLL\TestCases.h" />
     <ClInclude Include="Euclid.h" />
   </ItemGroup>
