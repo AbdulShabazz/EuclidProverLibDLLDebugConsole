@@ -87,7 +87,8 @@ int main()
 	
 	while (!Euclid.StatusReady)		
     {
-        std::cout << "Performing some other work..." << std::endl;
+        //std::cout << "Performing some other work..." << std::endl;
+		std::this_thread::sleep_for(std::chrono::seconds(1));
     }
 
 	if (Euclid.ProofFound_Flag)
