@@ -72,8 +72,6 @@ int main()
 	AxiomCommitLog_StdStrVec;
 
 	const auto start_time_chrono = std::chrono::high_resolution_clock::now();
-	
-	const bool ProofFound_Flag = 
 
 	Euclid.Prove
 	(
@@ -86,18 +84,24 @@ int main()
 		AxiomCommitLog_StdStrVec
 	);
 
-	/*
-	if (ProofFound_Flag)
+	
+	while (!Euclid.StatusReady)		
+    {
+        std::cout << "Performing some other work..." << std::endl;
+    }
+
+	if (Euclid.ProofFound_Flag)
 	{
 		std::cout << "Proof Found." << std::endl;
 		ProofStep_4DStdStrVec;
+		AxiomCommitLog_StdStrVec;
 	} else if (ProofStep_4DStdStrVec.size()) {
 		std::cout << "Partial Proof Found." << std::endl;
 		ProofStep_4DStdStrVec;
+		AxiomCommitLog_StdStrVec;
 	} else {
 		std::cout << "No Proof Found." << std::endl;
 	}
-	*/
 
 	std::cout << std::endl;
 	const auto end_time_chrono = std::chrono::high_resolution_clock::now();
