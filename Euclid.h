@@ -297,14 +297,14 @@ namespace Euclid_Prover
 		std::vector<
 		std::vector<
 		std::string>>&
-		InTheorem_UInt64Vec,
+		InTheorem_StdStrVec,
 
 		const
 		std::vector<
 		std::vector<
 		std::vector<
 		std::string>>>&
-		InAxioms_UInt64Vec,
+		InAxioms_StdStrVec,
 
 		bool&
 		OutProofFound_FlagRef,
@@ -340,7 +340,7 @@ namespace Euclid_Prover
 			]
 		() -> void
 		{
-			for (const std::vector<std::string>& Subnet_StdStrVec : InTheorem_UInt64Vec)
+			for (const std::vector<std::string>& Subnet_StdStrVec : InTheorem_StdStrVec)
 			{
 				BigInt128_t PrimeProduct_UInt64Vec{ 1 };
 				for (const std::string& Symbol_StdStr : Subnet_StdStrVec)
@@ -368,8 +368,8 @@ namespace Euclid_Prover
 		};
 
 		std::vector<
-			std::vector<
-			BigInt128_t>> Axioms_UInt64Vec;
+		std::vector<
+		BigInt128_t>> Axioms_UInt64Vec;
 
 		auto PopulateAxiomVec =
 			[
@@ -383,7 +383,7 @@ namespace Euclid_Prover
 					std::vector<
 					std::vector<
 					std::string>>&Subnet_StdStrVec :
-					InAxioms_UInt64Vec
+					InAxioms_StdStrVec
 				)
 			{
 				std::vector<BigInt128_t> TempInnerAxiom_UInt64Vec{};
@@ -538,12 +538,12 @@ namespace Euclid_Prover
 			bool ScopeSatisfied_Flag{ true };
 
 			std::vector<
-				std::vector<
-				std::string>> u{ TempProofSteps.back() };
+			std::vector<
+			std::string>> u{ TempProofSteps.back() };
 
 			std::vector<
-				std::vector<
-				std::string>> v{ InAxioms_UInt64Vec[InGuid_UInt64] };
+			std::vector<
+			std::string>> v{ InAxioms_StdStrVec[InGuid_UInt64] };
 
 			if (v[LHS].size() > u[LHS].size())
 			{
@@ -843,7 +843,7 @@ namespace Euclid_Prover
 
 				bool ProofFound_Flag{ true };
 
-				TempProofSteps.emplace_back(InTheorem_UInt64Vec);
+				TempProofSteps.emplace_back(InTheorem_StdStrVec);
 
 				std::vector<std::string> TempAxiomCommitLog_StdStrVec {};
 
@@ -913,8 +913,8 @@ namespace Euclid_Prover
 							const
 							std::vector<
 							std::string>& Subnet_StdStrVec :
-							InTheorem_UInt64Vec
-							)
+							InTheorem_StdStrVec
+						)
 					{
 						if (lhs_Flag)
 						{
@@ -955,14 +955,12 @@ namespace Euclid_Prover
 						break;
 					}
 
-				}
-				else {
+				} else {
 					// Retain Partial-proof //
 					continue;
 				}
 
-			}
-			else {
+			} else {
 
 				// Add new rewrites to the task queue //
 				for (const std::vector<BigInt128_t>& Axiom : Axioms_UInt64Vec)
@@ -972,7 +970,7 @@ namespace Euclid_Prover
 							Theorem[LHS] % Axiom[LHS] == 0
 							/*AxiomCallGraph_Map["lhs_reduce"][Theorem[last_UInt64]][Axiom[guid_UInt64]] == true /* &&
 							CallHistory[Theorem[last_UInt64]][Axiom[guid_UInt64]] == false*/
-							)
+						)
 					{/*
 						NextRoundCallHistory.emplace
 						(
@@ -995,7 +993,7 @@ namespace Euclid_Prover
 							Theorem[LHS] % Axiom[RHS] == 0
 							/*AxiomCallGraph_Map["lhs_expand"][Theorem[last_UInt64]][Axiom[guid_UInt64]] == true /*&&
 							!CallHistory[Theorem[last_UInt64]][Axiom[guid_UInt64]] == false*/
-							)
+						)
 					{/*
 						NextRoundCallHistory.emplace
 						(
@@ -1018,7 +1016,7 @@ namespace Euclid_Prover
 							Theorem[RHS] % Axiom[LHS] == 0
 							/*AxiomCallGraph_Map["rhs_reduce"][Theorem[last_UInt64]][Axiom[guid_UInt64]] == true /*&&
 							!CallHistory[Theorem[last_UInt64]][Axiom[guid_UInt64]] == false*/
-							)
+						)
 					{/*
 						NextRoundCallHistory.emplace
 						(
@@ -1060,7 +1058,7 @@ namespace Euclid_Prover
 					}
 					//CallHistory = NextRoundCallHistory;
 					std::cout << std::endl;
-				} // end for (...Axiom : InAxioms_UInt64Vec)
+				} // end for (...Axiom : InAxioms_StdStrVec)
 			} // end test (...Theorem[LHS] == Theorem[RHS])
 		} // end for (...!Tasks_Thread.empty() && !QED))
 		//*** End: Core Proof Engine (Loop) *** //
@@ -1078,7 +1076,7 @@ namespace Euclid_Prover
 
 		OutProofFound_FlagRef = QED;
 
-		OutStatusReadyFlag = true; /* Set last */
+		OutStatusReadyFlag = true; /* Set Status Variable last */
 
 		return EXIT_SUCCESS;
 	}
@@ -1250,7 +1248,7 @@ namespace Euclid_Prover
 			InAxiomsConstStdStrVec
 		)
 		{
-			Axioms_UInt64Vec =
+			Axioms_StdStrVec =
 
 			{
 				{
@@ -1403,7 +1401,7 @@ namespace Euclid_Prover
 			);
 			*/
 
-			Theorem_UInt64Vec =
+			Theorem_StdStrVec =
 
 			{
 				{"1", "+", "1", "+", "1", "+", "1"}, // (lhs) Prime Composite: 1585615607 //
@@ -1418,8 +1416,8 @@ namespace Euclid_Prover
 			std::thread th
 			(
 				__Prove__,
-				std::cref(Theorem_UInt64Vec),
-				std::cref(Axioms_UInt64Vec),
+				std::cref(Theorem_StdStrVec),
+				std::cref(Axioms_StdStrVec),
 				std::ref(ProofFound_Flag),
 				std::ref(StatusReady),
 				std::ref(ProofStep_4DStdStrVec),
@@ -1477,12 +1475,12 @@ namespace Euclid_Prover
 		std::vector<
 		std::vector<
 		std::string>>>
-		Axioms_UInt64Vec{};
+		Axioms_StdStrVec{};
 
 		std::vector<
 		std::vector<
 		std::string>>
-		Theorem_UInt64Vec{};
+		Theorem_StdStrVec{};
 
 		std::vector<
 		std::vector<
