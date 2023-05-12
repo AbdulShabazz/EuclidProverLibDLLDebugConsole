@@ -23,11 +23,11 @@ int main()
               {"2"} // (rhs) Prime Composite: 31 //
             },
 
-        // Axiom_2
-        {
-          {"2", "+", "2"}, // (lhs) Prime Composite: 22103 //
-          {"4"} // (rhs) Prime Composite: 29 //
-        }
+            // Axiom_2
+            {
+              {"2", "+", "2"}, // (lhs) Prime Composite: 22103 //
+              {"4"} // (rhs) Prime Composite: 29 //
+            }
         }
     );
 
@@ -89,7 +89,7 @@ int main()
         //std::this_thread::sleep_for(std::chrono::seconds(1));
     }
 
-    if (Euclid.ProofFound_Flag)
+    if (Euclid.ProofFoundFlag)
     {
         std::cout << "Proof Found." << std::endl;
         ProofStep_4DStdStrVec;
