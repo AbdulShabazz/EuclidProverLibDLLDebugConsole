@@ -162,8 +162,6 @@
 			}
 		);
 
-		const bool ProofFound_Flag =
-
 		Euclid.Prove
 		(
 			{ "{", "PlayerCharacterSideKick", "}", "IsIn", "{", "QuadUtilityVehicle", "}" }, // rhs
@@ -172,12 +170,16 @@
 			ProofStep // Storage for the Result
 		);
 
-		if (ProofFound_Flag)
+		while (!Euclid.StatusReady)
+		{
+		// Wait for thread to finish
+		}
+
+		if (Euclid.ProofFoundFlag)
 		{
 			std::cout << "Proof found:" << std::endl;
 			Euclid.PrintPath(ProofStep);
-		}
-		else if (ProofStep.size())
+		} else if (ProofStep.size())
 		{
 			std::cout << "Partial Proof found:\n" << std::endl;
 			Euclid.PrintPath(ProofStep);
@@ -297,14 +299,14 @@ namespace Euclid_Prover
 		std::vector<
 		std::vector<
 		std::string>>&
-		InTheorem_StdStrVec,
+		InTheoremStdStrVec,
 
 		const
 		std::vector<
 		std::vector<
 		std::vector<
 		std::string>>>&
-		InAxioms_StdStrVec,
+		InAxiomsStdStrVec,
 
 		bool&
 		OutProofFound_FlagRef,
@@ -317,12 +319,12 @@ namespace Euclid_Prover
 		std::vector<
 		std::vector<
 		std::string>>>>&
-		OutProofStep_StdStrVecRef,
+		OutProofStepStdStrVecRef,
 
 		std::vector<
 		std::vector<
 		std::string>>&
-		OutAxiomCommitLog_StdStrVecRef
+		OutAxiomCommitLogStdStrVecRef
 	)
 	{
 
@@ -340,7 +342,7 @@ namespace Euclid_Prover
 			]
 		() -> void
 		{
-			for (const std::vector<std::string>& Subnet_StdStrVec : InTheorem_StdStrVec)
+			for (const std::vector<std::string>& Subnet_StdStrVec : InTheoremStdStrVec)
 			{
 				BigInt128_t PrimeProduct_UInt64Vec{ 1 };
 				for (const std::string& Symbol_StdStr : Subnet_StdStrVec)
@@ -383,7 +385,7 @@ namespace Euclid_Prover
 					std::vector<
 					std::vector<
 					std::string>>&Subnet_StdStrVec :
-					InAxioms_StdStrVec
+					InAxiomsStdStrVec
 				)
 			{
 				std::vector<BigInt128_t> TempInnerAxiom_UInt64Vec{};
@@ -427,9 +429,9 @@ namespace Euclid_Prover
 		[RHS]
 		[guid_UInt64]
 		[last_UInt64]
-		[ProofStack_UInt64]
+		[ProofStackUInt64]
 
-		Axiom_N
+		Axiom
 		[LHS]
 		[RHS]
 		[guid_UInt64]
@@ -439,7 +441,7 @@ namespace Euclid_Prover
 		constexpr int RHS = 1;
 		constexpr int guid_UInt64 = 2;
 		constexpr int last_UInt64 = 3;
-		constexpr int ProofStack_UInt64 = 4;
+		constexpr int ProofStackUInt64 = 4;
 
 		auto RebalanceTheoremVec =
 			[
@@ -506,282 +508,6 @@ namespace Euclid_Prover
 		};
 		*/
 
-		/**
-		 * bool RewriteInstruction_Map[opcode](N), where opcode indicates
-		 *
-		 * 0x00: _lhs _reduce operation
-		 * 0x01: _lhs _expand operation
-		 * 0x02: _rhs _reduce operation
-		 * 0x03: _rhs _expand operation
-		 *
-		 * ...and N is Axiom_N.
-		 *
-		*/
-		std::unordered_map<
-		uint64_t,
-		std::function<
-		bool
-		(
-			uint64_t
-		)
-		>> RewriteInstruction_Map;
-
-		RewriteInstruction_Map.emplace(
-			0x00, // _lhs _reduce opcode
-			[&]
-		(
-			const
-			uint64_t
-			InGuid_UInt64
-		)
-		{
-			bool ScopeSatisfied_Flag{ true };
-
-			std::vector<
-			std::vector<
-			std::string>> u{ TempProofSteps.back() };
-
-			std::vector<
-			std::vector<
-			std::string>> v{ InAxioms_StdStrVec[InGuid_UInt64] };
-
-			if (v[LHS].size() > u[LHS].size())
-			{
-				ScopeSatisfied_Flag = false;
-			}
-			else {
-				uint64_t jdx_UIint64{};
-				for (const std::string val : u[LHS])
-				{
-					if (val == v[LHS][jdx_UIint64])
-					{
-						++jdx_UIint64;
-					}
-				}
-
-				if (jdx_UIint64 != u[LHS].size())
-				{
-					ScopeSatisfied_Flag = false;
-				}
-			}
-
-			TempProofSteps.emplace_back(u);
-
-			return ScopeSatisfied_Flag;
-		});
-
-		RewriteInstruction_Map.emplace(
-			0x01, // _lhs _expand opcode
-			[&]
-		(
-			const
-			uint64_t
-			InGuid_UInt64
-		)
-		{
-			bool ScopeSatisfied_Flag{ true };
-
-			return ScopeSatisfied_Flag;
-		});
-
-		RewriteInstruction_Map.emplace(
-			0x02, // _rhs _reduce opcode
-			[&]
-		(
-			const
-			uint64_t
-		InGuid_UInt64
-		)
-		{
-			bool ScopeSatisfied_Flag{ true };
-
-			return ScopeSatisfied_Flag;
-		});
-
-		RewriteInstruction_Map.emplace(
-			0x03, // _rhs _expand opcode
-			[&]
-		(
-			const
-			uint64_t
-			InGuid_UInt64
-		)
-		{
-			bool ScopeSatisfied_Flag{ true };
-
-			return ScopeSatisfied_Flag;
-		});
-
-		/**
-		PopulateAxiomCallGraph
-		(
-			std::unordered_map<
-			std::string,
-			std::unordered_map<
-			BigInt128_t,
-			std::unordered_map<
-			BigInt128_t,bool>>>&
-			InAxiomCallGraph_Map
-		)
-
-		Description: Adds qualifying axiom subnet netlists to the outbound route map.
-
-		The modulus (%) operator which checks for divisibility requires 40-70 CPU microinstructions
-		so it is more efficient to perform this expensive operation once.
-
-		Note: The following indirection labels are arbitrary: The chief goal is a standard sytem and method which adequately describes
-		the indirection of incoming & outgoing subnets. Reduce : LHS ==> RHS; Expand : LHS <== RHS.
-		*/
-		auto PopulateAxiomCallGraph =
-			[&]
-		(
-			std::unordered_map<
-			std::string,
-			std::unordered_map<
-			BigInt128_t,
-			std::unordered_map<
-			BigInt128_t, bool>>>&
-			InAxiomCallGraph_Map
-		)
-		{
-			for (const std::vector<BigInt128_t>& Axiom_i : Axioms_UInt64Vec)
-			{
-				if (Theorem_UInt64Vec[LHS] % Axiom_i[LHS] == 0)
-				{
-					InAxiomCallGraph_Map.emplace
-					(
-						"lhs_reduce",
-						std::unordered_map<
-						BigInt128_t,
-						std::unordered_map<
-						BigInt128_t, bool>>
-						{ {Theorem_UInt64Vec[guid_UInt64], { {Axiom_i[guid_UInt64], true} } }}
-					);
-
-					std::cout << "InAxiomCallGraph_Map[\"lhs_reduce\"][Theorem_UInt64Vec[guid_UInt64]][Axiom_i[guid_UInt64]] = " <<
-					std::boolalpha << InAxiomCallGraph_Map["lhs_reduce"][Theorem_UInt64Vec[guid_UInt64]][Axiom_i[guid_UInt64]] << std::endl;
-				}
-
-				if (Theorem_UInt64Vec[LHS] % Axiom_i[RHS] == 0)
-				{
-					InAxiomCallGraph_Map.emplace
-					(
-						"lhs_expand",
-						std::unordered_map<
-						BigInt128_t,
-						std::unordered_map<
-						BigInt128_t, bool>>
-						{ {Theorem_UInt64Vec[guid_UInt64], { {Axiom_i[guid_UInt64], true} } }}
-					);
-
-					std::cout << "InAxiomCallGraph_Map[\"lhs_expand\"][Theorem_UInt64Vec[guid_UInt64]][Axiom_i[guid_UInt64]] = " <<
-					std::boolalpha << InAxiomCallGraph_Map["lhs_expand"][Theorem_UInt64Vec[guid_UInt64]][Axiom_i[guid_UInt64]] << std::endl;
-				}
-
-				if (Theorem_UInt64Vec[RHS] % Axiom_i[LHS] == 0)
-				{
-					InAxiomCallGraph_Map.emplace
-					(
-						"rhs_reduce",
-						std::unordered_map<
-						BigInt128_t,
-						std::unordered_map<
-						BigInt128_t, bool>>
-						{ {Theorem_UInt64Vec[guid_UInt64], { {Axiom_i[guid_UInt64], true} } }}
-					);
-
-					std::cout << "InAxiomCallGraph_Map[\"rhs_reduce\"][Theorem_UInt64Vec[guid_UInt64]][Axiom_i[guid_UInt64]] = " <<
-					std::boolalpha << InAxiomCallGraph_Map["rhs_reduce"][Theorem_UInt64Vec[guid_UInt64]][Axiom_i[guid_UInt64]] << std::endl;
-				}
-
-				if (Theorem_UInt64Vec[RHS] % Axiom_i[RHS] == 0)
-				{
-					InAxiomCallGraph_Map.emplace
-					(
-						"rhs_expand",
-						std::unordered_map<
-						BigInt128_t,
-						std::unordered_map<
-						BigInt128_t, bool>>
-						{ {Theorem_UInt64Vec[guid_UInt64], { {Axiom_i[guid_UInt64], true} } }}
-					);
-
-					std::cout << "InAxiomCallGraph_Map[\"rhs_expand\"][Theorem_UInt64Vec[guid_UInt64]][Axiom_i[guid_UInt64]] = " <<
-					std::boolalpha << InAxiomCallGraph_Map["rhs_expand"][Theorem_UInt64Vec[guid_UInt64]][Axiom_i[guid_UInt64]] << std::endl;
-				}
-
-				for (const std::vector<BigInt128_t>& Axiom_j : Axioms_UInt64Vec)
-				{
-					if (Axiom_i[guid_UInt64] == Axiom_j[guid_UInt64])
-						continue;
-
-					if (Axiom_i[LHS] % Axiom_j[LHS] == 0)
-					{
-						InAxiomCallGraph_Map.emplace
-						(
-							"lhs_reduce",
-							std::unordered_map<
-							BigInt128_t,
-							std::unordered_map<
-							BigInt128_t, bool>>
-							{ {Axiom_i[guid_UInt64], { {Axiom_j[guid_UInt64], true} } }}
-						);
-
-						std::cout << "InAxiomCallGraph_Map[\"lhs_reduce\"][Axiom_i[guid_UInt64]][Axiom_j[guid_UInt64]] = " <<
-						std::boolalpha << InAxiomCallGraph_Map["lhs_reduce"][Axiom_i[guid_UInt64]][Axiom_j[guid_UInt64]] << std::endl;
-					}
-
-					if (Axiom_i[LHS] % Axiom_j[RHS] == 0)
-					{
-						InAxiomCallGraph_Map.emplace
-						(
-							"lhs_expand",
-							std::unordered_map<
-							BigInt128_t,
-							std::unordered_map<
-							BigInt128_t, bool>>
-							{ {Axiom_i[guid_UInt64], { {Axiom_j[guid_UInt64], true} } }}
-						);
-
-						std::cout << "InAxiomCallGraph_Map[\"lhs_expand\"][Axiom_i[guid_UInt64]][Axiom_j[guid_UInt64]] = " <<
-						std::boolalpha << InAxiomCallGraph_Map["lhs_expand"][Axiom_i[guid_UInt64]][Axiom_j[guid_UInt64]] << std::endl;
-					}
-
-					if (Axiom_i[RHS] % Axiom_j[LHS] == 0)
-					{
-						InAxiomCallGraph_Map.emplace
-						(
-							"rhs_reduce",
-							std::unordered_map<
-							BigInt128_t,
-							std::unordered_map<
-							BigInt128_t, bool>>
-							{ {Axiom_i[guid_UInt64], { {Axiom_j[guid_UInt64], true} } }}
-						);
-
-						std::cout << "InAxiomCallGraph_Map[\"rhs_reduce\"][Axiom_i[guid_UInt64]][Axiom_j[guid_UInt64]] = " <<
-						std::boolalpha << InAxiomCallGraph_Map["rhs_reduce"][Axiom_i[guid_UInt64]][Axiom_j[guid_UInt64]] << std::endl;
-					}
-
-					if (Axiom_i[RHS] % Axiom_j[RHS] == 0)
-					{
-						InAxiomCallGraph_Map.emplace
-						(
-							"rhs_expand",
-							std::unordered_map<
-							BigInt128_t,
-							std::unordered_map<
-							BigInt128_t, bool>>
-							{ {Axiom_i[guid_UInt64], { {Axiom_j[guid_UInt64], true} } }}
-						);
-
-						std::cout << "InAxiomCallGraph_Map[\"rhs_expand\"][Axiom_i[guid_UInt64]][Axiom_j[guid_UInt64]] = " <<
-						std::boolalpha << InAxiomCallGraph_Map["rhs_expand"][Axiom_i[guid_UInt64]][Axiom_j[guid_UInt64]] << std::endl;
-					}
-				} // end for (...Axiom_j : Axioms_UInt64Vec)
-			} // end for (...Axiom_i : Axioms_UInt64Vec)
-		};
-
 		uint64_t MaxAllowedProofs_UInt64{ 1 };
 		uint64_t TotalProofsFound_UInt64{};
 
@@ -793,8 +519,17 @@ namespace Euclid_Prover
 		BigInt128_t, bool>>>
 		AxiomCallGraph_Map;
 
-		// Populate access lists
-		//PopulateAxiomCallGraph(AxiomCallGraph_Map);
+		/**
+		 * bool RewriteInstruction_Map[opcode](N), where opcode indicates
+		 *
+		 * 0x00: _lhs _reduce operation
+		 * 0x01: _lhs _expand operation
+		 * 0x02: _rhs _reduce operation
+		 * 0x03: _rhs _expand operation
+		 *
+		 * ...and N is Axiom_N.
+		 *
+		*/
 
 		// Prevent next round call loops to improve Performance
 		std::unordered_map<BigInt128_t,
@@ -812,8 +547,8 @@ namespace Euclid_Prover
 		Tasks_Thread.push(Theorem_UInt64Vec);
 
 		// Todo: Develop an artificial neural network that can infer a solution and proofsteps from an axiom CallGraph 
-		// Todo: Add Remove, SendOffline operations for individual axioms
-		// Todo: Add Resume, Suspend Proof operations
+		// Todo: Add Remove, SendOffline support for individual axioms
+		// Todo: Add Resume, Suspend operations for Proofs
 		// Todo: Create a proof-statement hash which can be used as a file handle to a proofstep solution when it posts to a file (stateless)
 		// Todo: Prevent Tasks_Thread (stack) overflows by deferring unprocessed axiom rewrites onto a deferred thread
 
@@ -829,132 +564,271 @@ namespace Euclid_Prover
 			const bool TentativeProofFound_Flag = (Theorem[LHS] == Theorem[RHS]);
 			if (TentativeProofFound_Flag)
 			{
-				// OK, we've used prime number fields to quickly narrow the solution space, 
-				// now we will need to verify the solution space converges on a valid routemap...
-
-				/*
-				std::vector<
-				std::vector<
-				std::string>> v {InTheorem_UInt64Vec};
+				/** 
+				Alright, we have successfully employed prime number fields
+				to effectively and swiftly reduce the size of our potential solution set. 
+				
+				Now, our next step is to confirm that this narrowed down solution space 
+				indeed leads us to a valid routing map...
 				*/
 
 				std::cout << "Tentative Proof Found" << std::endl;
 				std::cout << "Theorem {" << Theorem[LHS] << ", " << Theorem[RHS] << "} " << std::endl;
 
-				bool ProofFound_Flag{ true };
+				bool ProofFoundFlag{ true };
 
-				TempProofSteps.emplace_back(InTheorem_StdStrVec);
+				TempProofSteps.emplace_back(InTheoremStdStrVec);
+
+				auto Rewrite = [&]
+				(
+					auto& th,
+
+					const auto& from,
+
+					const auto& to
+				) -> bool
+				{
+					bool bSuccessFlag{};
+
+					if (th.size () < from.size ())
+						return false;
+
+					std::unordered_map<std::string, std::string>
+
+						endscope{ {"(", ")"}, {"{", "}"}, {"[", "]"} };
+
+					std::vector<
+						std::string> result{};
+
+					uint64_t i{};
+
+					const uint64_t I{ from.size () };
+
+					for (const auto& val : th)
+					{
+						std::cout << "Next val: " << val << std::endl;
+
+						if (!bSuccessFlag && val == from[i])
+						{
+							++i;
+
+							std::cout << "Match found: " << val << " >> ";
+
+							if (i == I)
+							{
+								for (const auto& u2 : to)
+								{
+									std::cout << u2 << " ";
+									result.emplace_back (u2);
+								}
+
+								bSuccessFlag = true;
+
+								std::cout << ">> Substitution made" << std::endl;
+
+								i = 0;
+
+								continue;
+							}
+						} else {
+							i = 0; // reset //
+
+							std::cout << "No Match found: " << val << std::endl;
+
+							result.emplace_back (val);
+						}
+						std::cout << std::endl;
+					}
+
+					th = result;
+
+					return bSuccessFlag;
+				};
+
+				/**
+				Q: Write a c++20 algorithm, ProofVerified, which accepts Theorem,
+				InTheoremStdStrVec, and InAxiomsStdStrVec, as parameters and returns a bool type.
+
+				ProofVerified clones InTheoremStdStrVec as OutTheoremStdStrVec, and performs
+				the following operations:
+
+				ProofVerified loops through Theorem, starting at Theorem[ProofStackUInt64],
+				and reads two values from the vector at a time: Theorem[ProofStackUInt64 + i++],
+				Theorem[ProofStackUInt64 + i++] - 1.
+
+				The first value read out,
+				const auto& opcode = Theorem[ProofStackUInt64 + i++], is an opcode
+				whose hexadecimal value may range from 0x00 to 0x03.
+
+				The second value read out, const auto& guid = Theorem[ProofStackUInt64 + i++] - 1,
+				is an index into InAxiomsStdStrVec.
+
+				An opcode of 0x00 indicates a "lhsreduce" operation, which replaces all occurrences
+				of InAxiomsStdStrVec[guid][LHS] in OutTheoremStdStrVec[LHS] with InAxiomsStdStrVec[guid][RHS],
+				resizing OutTheoremStdStrVec, as required.
+
+				An opcode of 0x01 indicates a "lhsexpand" operation, which replaces all occurrences
+				of InAxiomsStdStrVec[guid][LHS] in OutTheoremStdStrVec[RHS] with InAxiomsStdStrVec[guid][LHS],
+				resizing OutTheoremStdStrVec, as required.
+
+				An opcode of 0x02 indicates a "rhsreduce" operation, which replaces all occurrences
+				of InAxiomsStdStrVec[guid][RHS] in OutTheoremStdStrVec[LHS] with InAxiomsStdStrVec[guid][RHS],
+				resizing OutTheoremStdStrVec, as required.
+
+				An opcode of 0x03 indicates a "rhsexpand" operation, which replaces all occurrences
+				of InAxiomsStdStrVec[guid][RHS] in OutTheoremStdStrVec[RHS] with InAxiomsStdStrVec[guid][LHS],
+				resizing OutTheoremStdStrVec, as required.
+
+				If ProofVerified is unable to complete the loop, the algorithm returns false.
+				*/
+				auto ProofVerified = [&]
+				(
+					const
+					std::vector<
+					BigInt128_t>&
+					InTheoremUInt64,
+
+					const
+					std::vector<
+					std::vector<
+					std::string>>&
+					InTheoremStdStrVec,
+
+					const
+					std::vector<
+					std::vector<
+					std::vector<
+					std::string>>>&
+					InAxiomsStdStrVec,
+
+					std::vector<
+					std::vector<
+					std::string>>&
+					OutAxiomCommitLogStdStrVecRef,
+
+					std::vector<
+					std::vector<
+					std::vector<
+					std::string>>>&
+					OutTheoremStdStrVec
+				) -> bool
+				{
+					bool ReturnStatusFlag{ true };
+
+					OutTheoremStdStrVec.emplace_back (InTheoremStdStrVec);
+
+					std::vector<
+					std::vector<
+					std::string>>
+					TempTheoremStdStrVec{ InTheoremStdStrVec };
+
+					std::vector<
+					std::string>
+					TempAxiomCommitLogStdStrVecRef;
+
+					/**
+					Loop through Theorem, starting at Theorem[ProofStackUInt64],
+					and read two values from the vector at a time.
+
+					The first value read out, is an opcode whose hexadecimal value
+					ranges from 0x00 to 0x03.
+
+					The second value read out, is an index into InAxiomsStdStrVec.
+					*/
+
+					uint64_t i { ProofStackUInt64 };
+
+					while (i < InTheoremUInt64.size ())
+					{
+						if (!ReturnStatusFlag)
+							return ReturnStatusFlag;
+
+						const uint64_t& opcode = uint64_t{ InTheoremUInt64[i++] };
+						const uint64_t& guid = uint64_t{ InTheoremUInt64[i++] - 1 };
+
+						//TempTheoremStdStrVec = OutTheoremStdStrVec.back();
+
+						switch (opcode)
+						{
+							case 0x00:
+							{ // "lhsreduce" operation //
+								std::cout << "lhs_reduce via Axiom_" << guid/*.str()*/ << std::endl;
+								ReturnStatusFlag =
+									Rewrite (TempTheoremStdStrVec[LHS], InAxiomsStdStrVec[guid][LHS], InAxiomsStdStrVec[guid][RHS]);
+								TempAxiomCommitLogStdStrVecRef.emplace_back ("lhs_reduce via Axiom_" + guid/*.str()*/);
+								break;
+							}
+							case 0x01:
+							{ // "lhsexpand" operation //
+								std::cout << "lhs_expand via Axiom_" << guid/*.str()*/ << std::endl;
+								ReturnStatusFlag =
+									Rewrite (TempTheoremStdStrVec[LHS], InAxiomsStdStrVec[guid][RHS], InAxiomsStdStrVec[guid][LHS]);
+								TempAxiomCommitLogStdStrVecRef.emplace_back ("lhs_expand via Axiom_" + guid/*.str()*/);
+								break;
+							}
+							case 0x02:
+							{ // "rhsreduce" operation //
+								std::cout << "rhs_reduce via Axiom_" << guid/*.str()*/ << std::endl;
+								ReturnStatusFlag =
+									Rewrite (TempTheoremStdStrVec[RHS], InAxiomsStdStrVec[guid][LHS], InAxiomsStdStrVec[guid][RHS]);
+								TempAxiomCommitLogStdStrVecRef.emplace_back ("rhs_reduce via Axiom_" + guid/*.str()*/);
+								break;
+							}
+							case 0x03:
+							{ // "rhsexpand" operation //
+								std::cout << "rhs_expand via Axiom_" << guid/*.str()*/ << std::endl;
+								ReturnStatusFlag =
+									Rewrite (TempTheoremStdStrVec[RHS], InAxiomsStdStrVec[guid][RHS], InAxiomsStdStrVec[guid][LHS]);
+								TempAxiomCommitLogStdStrVecRef.emplace_back ("rhs_expand via Axiom_" + guid/*.str()*/);
+								break;
+							}
+							default:
+							{
+								// Invalid opcode. //
+								ReturnStatusFlag = false;
+								break; false;
+							}
+						} // end switch(opcode)
+						OutTheoremStdStrVec.emplace_back (TempTheoremStdStrVec);
+					}
+					OutAxiomCommitLogStdStrVecRef.emplace_back (TempAxiomCommitLogStdStrVecRef);
+
+					// If TentativeProofVerified is unable to complete the loop, the algorithm returns false.
+					return true;
+				};
 
 				std::vector<std::string> TempAxiomCommitLog_StdStrVec {};
 
-				/*
-				if 
-					(
-						!ScopeSatisfied
+				//QED = true;
+				//break;
+				
+				std::vector<
+				std::vector<
+				std::vector<
+				std::string>>>
+				OutTheoremStdStrVec;
+
+				if (
+						ProofVerified
 						(
-							TempAxiomCommitLog_StdStrVec, 
-							TempProofSteps
+							Theorem,
+							InTheoremStdStrVec,
+							InAxiomsStdStrVec,
+							OutAxiomCommitLogStdStrVecRef,
+							OutTheoremStdStrVec
 						)
 					)
 				{
-					ProofFound_Flag = false;
-					break;
-				}
-
-				*/
-				for
-					(
-						uint64_t ProofStep_UInt64 = ProofStack_UInt64;
-						ProofStep_UInt64 < Theorem.size();
-						ProofStep_UInt64 += 2
-					)
-				{/*
-					if
-					(
-						!RewriteInstruction_Map
-						[uint64_t { Theorem[ProofStep_UInt64] }] // provide opcode //
-						(uint64_t { Theorem[ProofStep_UInt64 + 1] }) // provide Axiom_N //
-					)
-					{
-						ProofFound_Flag = false;
-						break;
-					}*/
-
-					std::string TempVal {};
-					switch (uint64_t{ Theorem[ProofStep_UInt64] })
-					{
-					case 0x00:
-						TempVal = "lhs_reduce via "; break;
-					case 0x01:
-						TempVal = "lhs_expand via "; break;
-					case 0x02:
-						TempVal = "rhs_reduce via "; break;
-					case 0x03:
-						TempVal = "rhs_expand via "; break;
-					}
-					TempVal += Theorem[ProofStep_UInt64 + 1].str();
-					TempAxiomCommitLog_StdStrVec.emplace_back(TempVal);
-					std::cout << TempVal << std::endl;
-				}
-
-				OutAxiomCommitLog_StdStrVecRef.emplace_back(TempAxiomCommitLog_StdStrVec);
-
-				QED = true;
-				break;
-
-				if (ProofFound_Flag)
-				{
-					std::cout << std::endl;
-					std::cout << "Proof Found" << std::endl;
-
-					bool lhs_Flag = false;
-					for
-						(
-							const
-							std::vector<
-							std::string>& Subnet_StdStrVec :
-							InTheorem_StdStrVec
-						)
-					{
-						if (lhs_Flag)
-						{
-							std::cout << "= ";
-						}
-
-						lhs_Flag = true;
-
-						for (const std::string& Symbol_StdStr : Subnet_StdStrVec)
-						{
-							std::cout << Symbol_StdStr << " ";
-						}
-					}
-
-					std::cout << std::endl;
-
-					if (ProofStack_UInt64 < Theorem.size())
-					{
-						for
-							(
-								uint64_t ProofStep_UInt64 = ProofStack_UInt64;
-								ProofStep_UInt64 < Theorem.size();
-								++ProofStep_UInt64
-								)
-						{
-							std::cout << "Axiom_" << Theorem[ProofStep_UInt64] << std::endl;
-						}
-					}
-					std::cout << "Theorem_0000 {" << Theorem[LHS] << ", " << Theorem[RHS] << "}" << std::endl;
-					std::cout << std::endl;
-					std::cout << "Q.E.D." << std::endl;
-
 					++TotalProofsFound_UInt64;
+
+					std::cout << "Proof Found" << std::endl;
+					std::cout << "Theorem {" << Theorem[LHS] << ", " << Theorem[RHS] << "} " << std::endl;
 
 					if (TotalProofsFound_UInt64 >= MaxAllowedProofs_UInt64)
 					{
 						QED = true;
 						break;
 					}
-
 				} else {
 					// Retain Partial-proof //
 					continue;
@@ -965,22 +839,10 @@ namespace Euclid_Prover
 				// Add new rewrites to the task queue //
 				for (const std::vector<BigInt128_t>& Axiom : Axioms_UInt64Vec)
 				{
-					if
-						(
-							Theorem[LHS] % Axiom[LHS] == 0
-							/*AxiomCallGraph_Map["lhs_reduce"][Theorem[last_UInt64]][Axiom[guid_UInt64]] == true /* &&
-							CallHistory[Theorem[last_UInt64]][Axiom[guid_UInt64]] == false*/
-						)
-					{/*
-						NextRoundCallHistory.emplace
-						(
-							Theorem[last_UInt64],
-							std::unordered_map<BigInt128_t, bool>{ {Axiom[guid_UInt64], true}}
-						);*/
-
+					if (Theorem[LHS] % Axiom[LHS] == 0)
+					{
 						std::vector<BigInt128_t> Theorem_0000{ Theorem };
 						Theorem_0000[LHS] = Theorem_0000[LHS] / Axiom[LHS] * Axiom[RHS];
-						//Theorem_0000[last_UInt64] = Axiom[guid_UInt64];
 						Theorem_0000.emplace_back(0x00); // Push opcode 0x00 onto the proofstack because we performed a _lhs _reduce operation) //
 						Theorem_0000.emplace_back(Axiom[guid_UInt64]); // Push the Axiom ID onto the proofstack //
 						std::cout << "_reduce Module_0000 via Axiom_" << Axiom[guid_UInt64] << " {" << Theorem_0000[LHS] << ", " << Theorem_0000[RHS] << "}" << std::endl;
@@ -988,22 +850,10 @@ namespace Euclid_Prover
 						Tasks_Thread.push(Theorem_0000);
 					}
 
-					if
-						(
-							Theorem[LHS] % Axiom[RHS] == 0
-							/*AxiomCallGraph_Map["lhs_expand"][Theorem[last_UInt64]][Axiom[guid_UInt64]] == true /*&&
-							!CallHistory[Theorem[last_UInt64]][Axiom[guid_UInt64]] == false*/
-						)
-					{/*
-						NextRoundCallHistory.emplace
-						(
-							Theorem[last_UInt64],
-							std::unordered_map<BigInt128_t, bool>{ {Axiom[guid_UInt64], true}}
-						);*/
-
+					if (Theorem[LHS] % Axiom[RHS] == 0)
+					{
 						std::vector<BigInt128_t> Theorem_0001{ Theorem };
 						Theorem_0001[LHS] = Theorem_0001[LHS] / Axiom[RHS] * Axiom[LHS];
-						//Theorem_0001[last_UInt64] = Axiom[guid_UInt64];
 						Theorem_0001.emplace_back(0x01); // Push opcode 0x01 onto the proofstack because we performed a _lhs _expand operation) //
 						Theorem_0001.emplace_back(Axiom[guid_UInt64]); // Push the Axiom ID onto the proofstack //
 						std::cout << "_expand Module_0001 via Axiom_" << Axiom[guid_UInt64] << " {" << Theorem_0001[LHS] << ", " << Theorem_0001[RHS] << "}" << std::endl;
@@ -1011,22 +861,10 @@ namespace Euclid_Prover
 						Tasks_Thread.push(Theorem_0001);
 					}
 
-					if
-						(
-							Theorem[RHS] % Axiom[LHS] == 0
-							/*AxiomCallGraph_Map["rhs_reduce"][Theorem[last_UInt64]][Axiom[guid_UInt64]] == true /*&&
-							!CallHistory[Theorem[last_UInt64]][Axiom[guid_UInt64]] == false*/
-						)
-					{/*
-						NextRoundCallHistory.emplace
-						(
-							Theorem[last_UInt64],
-							std::unordered_map<BigInt128_t, bool>{ {Axiom[guid_UInt64], true}}
-						);*/
-
+					if (Theorem[RHS] % Axiom[LHS] == 0)
+					{
 						std::vector<BigInt128_t> Theorem_0002{ Theorem };
 						Theorem_0002[RHS] = Theorem_0002[RHS] / Axiom[LHS] * Axiom[RHS];
-						//Theorem_0002[last_UInt64] = Axiom[guid_UInt64];
 						Theorem_0002.emplace_back(0x02); // Push opcode 0x02 onto the proofstack because we performed a _rhs _reduce operation) //
 						Theorem_0002.emplace_back(Axiom[guid_UInt64]); // Push the Axiom ID onto the proofstack //
 						std::cout << "_reduce Module_0002 via Axiom_" << Axiom[guid_UInt64] << " {" << Theorem_0002[LHS] << ", " << Theorem_0002[RHS] << "}" << std::endl;
@@ -1035,30 +873,18 @@ namespace Euclid_Prover
 					}
 
 					if
-						(
-							Theorem[RHS] % Axiom[RHS] == 0
-							/*AxiomCallGraph_Map["rhs_expand"][Theorem[last_UInt64]][Axiom[guid_UInt64]] == true /*&&
-							!CallHistory[Theorem[last_UInt64]][Axiom[guid_UInt64]] == false*/
-							)
-					{/*
-						NextRoundCallHistory.emplace
-						(
-							Theorem[last_UInt64],
-							std::unordered_map<BigInt128_t, bool>{ {Axiom[guid_UInt64], true}}
-						);*/
-
+						(Theorem[RHS] % Axiom[RHS] == 0)
+					{
 						std::vector<BigInt128_t> Theorem_0003{ Theorem };
 						Theorem_0003[RHS] = Theorem_0003[RHS] / Axiom[RHS] * Axiom[LHS];
-						//Theorem_0003[last_UInt64] = Axiom[guid_UInt64];
 						Theorem_0003.emplace_back(0x03); // Push opcode 0x03 onto the proofstack because we performed a _rhs _expand operation) //
 						Theorem_0003.emplace_back(Axiom[guid_UInt64]); // Push the Axiom ID onto the proofstack //
 						std::cout << "_expand Module_0003 via Axiom_" << Axiom[guid_UInt64] << " {" << Theorem_0003[LHS] << ", " << Theorem_0003[RHS] << "}" << std::endl;
 
 						Tasks_Thread.push(Theorem_0003);
 					}
-					//CallHistory = NextRoundCallHistory;
 					std::cout << std::endl;
-				} // end for (...Axiom : InAxioms_StdStrVec)
+				} // end for (...Axiom : InAxiomsStdStrVec)
 			} // end test (...Theorem[LHS] == Theorem[RHS])
 		} // end for (...!Tasks_Thread.empty() && !QED))
 		//*** End: Core Proof Engine (Loop) *** //
@@ -1185,7 +1011,7 @@ namespace Euclid_Prover
 		}
 
 		bool StatusReady{};
-		bool ProofFound_Flag{};
+		bool ProofFoundFlag{};
 
 		bool Axiom
 		(
@@ -1195,34 +1021,6 @@ namespace Euclid_Prover
 			InAxiomConstStdStrVecRef
 		)
 		{
-			/*
-			// Check if the curly brace scope is valid
-			if (!CurlyBraceScopeChecker(InAxiomConstStdStrVecRef))
-			{
-				return false;
-			}
-
-			// Split the equation into left-hand side (LHS) and right-hand side (RHS)
-			if (!SplitEquation(InAxiomConstStdStrVecRef, AxiomLHS, AxiomRHS))
-			{
-				return false;
-			}
-
-			// Check if the axiom lengths are valid
-			if (!AxiomLengthsAreValid(AxiomLHS, AxiomRHS))
-			{
-				return false;
-			}
-
-			// Update LemmaLHSPrimeComposite and LemmaRHSPrimeComposite
-			if (!CalculatePrimeComposites(AxiomLHS,
-				AxiomRHS,
-				AxiomLHSPrimeComposite,
-				AxiomRHSPrimeComposite))
-			{
-				return false;
-			}
-			*/
 			return true;
 		}
 
@@ -1248,7 +1046,7 @@ namespace Euclid_Prover
 			InAxiomsConstStdStrVec
 		)
 		{
-			Axioms_StdStrVec =
+			AxiomsStdStrVec =
 
 			{
 				{
@@ -1292,34 +1090,6 @@ namespace Euclid_Prover
 			InLemmaConstStdStringVecRef
 		)
 		{
-			/*
-			// Check if the curly brace scope is valid
-			if (!CurlyBraceScopeChecker(InLemmaConstStdStringVecRef))
-			{
-				return false;
-			}
-
-			// Split the equation into left-hand side (LHS) and right-hand side (RHS)
-			if (!SplitEquation(InLemmaConstStdStringVecRef, LemmaLHS, LemmaRHS))
-			{
-				return false;
-			}
-
-			// Check if the Lemma lengths are valid
-			if (!AxiomLengthsAreValid(LemmaLHS, LemmaRHS))
-			{
-				return false;
-			}
-
-			// Update LemmaLHSPrimeComposite and LemmaRHSPrimeComposite
-			if (!CalculatePrimeComposites(LemmaLHS,
-				LemmaRHS,
-				LemmaLHSPrimeComposite,
-				LemmaRHSPrimeComposite))
-			{
-				return false;
-			}
-			*/
 			return true;
 		}
 
@@ -1386,47 +1156,30 @@ namespace Euclid_Prover
 			std::vector<
 			std::vector<
 			std::string>>&
-			OutAxiomCommitLog_StdStrVecRef
+			OutAxiomCommitLogStdStrVecRef
 		)
 		{			
 			Reset();
 
-			/*
-			// Call the main proof function with the default Indirection::auto_
-			Auto
-			(
-				InProof_Theorem,
-				InAxioms_AxiomBaseClassVec,
-				Indirection::auto_
-			);
-			*/
-
-			Theorem_StdStrVec =
+			TheoremStdStrVec =
 
 			{
 				{"1", "+", "1", "+", "1", "+", "1"}, // (lhs) Prime Composite: 1585615607 //
 				{"4"} // (rhs) Prime Composite: 29 //
 			};
 
-			/*
-			std::promise<int> promise;
-			std::future<bool> bProofFound_FutureFlag = promise.get_future();
-			*/
-
 			std::thread th
 			(
 				__Prove__,
-				std::cref(Theorem_StdStrVec),
-				std::cref(Axioms_StdStrVec),
-				std::ref(ProofFound_Flag),
+				std::cref(TheoremStdStrVec),
+				std::cref(AxiomsStdStrVec),
+				std::ref(ProofFoundFlag),
 				std::ref(StatusReady),
-				std::ref(ProofStep_4DStdStrVec),
-				std::ref(OutAxiomCommitLog_StdStrVecRef)
+				std::ref(ProofStep4DStdStrVec),
+				std::ref(OutAxiomCommitLogStdStrVecRef)
 			);
 
 			th.detach();
-
-			// bProofFound_FlagFuture.get();
 
 			return;
 		}
@@ -1437,7 +1190,7 @@ namespace Euclid_Prover
 			std::initializer_list<
 			std::vector<
 			std::string>>&
-			InProofInitListConstCharRef,
+			InProofInitListConstStdStrVecRef,
 
 			std::vector<
 			std::vector<
@@ -1449,20 +1202,20 @@ namespace Euclid_Prover
 			std::vector<
 			std::vector<
 			std::string>>&
-			OutAxiomCommitLog_StdStrVecRef
+			OutAxiomCommitLogStdStrVecRef
 		)
 		{
 			const
 			std::vector<
 			std::vector<
 			std::string>>&
-			InProofVecConstCharRef { InProofInitListConstCharRef };
+			InProofVecConstCharRef { InProofInitListConstStdStrVecRef };
 
 			Prove 
 			(
 				InProofVecConstCharRef,
 				OutPath4DStdStrVecRef,
-				OutAxiomCommitLog_StdStrVecRef
+				OutAxiomCommitLogStdStrVecRef
 			);
 		}
 
@@ -1475,24 +1228,24 @@ namespace Euclid_Prover
 		std::vector<
 		std::vector<
 		std::string>>>
-		Axioms_StdStrVec{};
+		AxiomsStdStrVec{};
 
 		std::vector<
 		std::vector<
 		std::string>>
-		Theorem_StdStrVec{};
+		TheoremStdStrVec{};
 
 		std::vector<
 		std::vector<
 		std::vector<
 		std::vector<
 		std::string>>>>
-		ProofStep_4DStdStrVec{};
+		ProofStep4DStdStrVec{};
 
 		void Reset()
 		{
 			StatusReady = false;
-			ProofFound_Flag = false;
+			ProofFoundFlag = false;
 		};
 	};
 
