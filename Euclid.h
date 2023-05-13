@@ -99,15 +99,25 @@
 	{ PlayerCharacterSideKick } IsIn { QuadUtilityVehicle } = { Vehicle { QuadUtilityVehicle { VehicleDriveDisabled } } }
 	{ PlayerCharacterSideKick } IsIn { QuadUtilityVehicle } = { QuadUtilityVehicle } and { VehicleDriveDisabled }
 
-	Usage Example C++.
+	Usage Example C++
 
 	```c++
-		// Create ProofStepProofStep[proof][lineNumber][LHS/RHS][SYMBOL] placeholder to store the proof
+
 		std::vector<
+			std::vector<
+			std::vector<
+			std::vector<
+			std::string>>>>
+
+			// Instantiate ProofStep_4DStdStrVec[proof][step][lhs/rhs][token]
+			ProofStep_4DStdStrVec;
+
 		std::vector<
-		std::vector<
-		std::vector<
-		std::string>>>> ProofStep;
+			std::vector<
+			std::string>>
+
+			// Instantiate AxiomCommitLog_StdStrVec[proof][step]
+			AxiomCommitLog_StdStrVec;
 
 		// Instantiate Prover (module)
 		EuclidProver<BracketType::CurlyBraces> Euclid;
@@ -155,30 +165,35 @@
 
 		Euclid.Lemmas
 		(
-			// Lemma (rewrite helper) 00
+			// Lemma_00 (rewrite helper)
 			{
 				{ "{", "PlayerCharacterSideKick", "}", "IsIn", "{", "StyxBoat", "}" }, // lhs
 				{ "{", "StyxBoat", "}", "IsNotIn", "{", "StyxRiver", "}" } // rhs
 			}
 		);
 
-		const bool ProofFound_Flag =
-
 		Euclid.Prove
 		(
-			{ "{", "PlayerCharacterSideKick", "}", "IsIn", "{", "QuadUtilityVehicle", "}" }, // rhs
-			{ "{", "QuadUtilityVehicle", "}", "and", "{", "VehicleDriveDisabled", "}" }, // lhs
+			{
+				{ "{", "PlayerCharacterSideKick", "}", "IsIn", "{", "QuadUtilityVehicle", "}", }, // lhs
+				{ "{", "QuadUtilityVehicle", "}", "and", "{", "VehicleDriveDisabled", "}" } // rhs
+			},
 
-			ProofStep // Storage for the Result
+			ProofStep_4DStdStrVec,
+			AxiomCommitLog_StdStrVec
 		);
 
-		if (ProofFound_Flag)
+		while (!Euclid.StatusReady)
+		{
+			//std::cout << "Performing some other work..." << std::endl;
+			std::this_thread::sleep_for(std::chrono::seconds(1));
+		}
+
+		if (Euclid.ProofFoundFlag)
 		{
 			std::cout << "Proof found:" << std::endl;
 			Euclid.PrintPath(ProofStep);
-		}
-		else if (ProofStep.size())
-		{
+		} else if (ProofStep.size()) {
 			std::cout << "Partial Proof found:\n" << std::endl;
 			Euclid.PrintPath(ProofStep);
 		} else {
@@ -750,34 +765,34 @@ namespace Euclid_Prover
 						{
 							case 0x00:
 							{ // "lhsreduce" operation //
-								std::cout << "lhs_reduce via Axiom_" << guid/*.str()*/ << std::endl;
+								std::cout << "lhs_reduce via Axiom_" << guid << std::endl;
 								ReturnStatusFlag =
 									Rewrite (TempTheoremStdStrVec[LHS], InAxiomsStdStrVec[guid][LHS], InAxiomsStdStrVec[guid][RHS]);
-								TempAxiomCommitLogStdStrVecRef.emplace_back ("lhs_reduce via Axiom_" + guid/*.str()*/);
+								TempAxiomCommitLogStdStrVecRef.emplace_back ("lhs_reduce via Axiom_" + std::to_string (guid));
 								break;
 							}
 							case 0x01:
 							{ // "lhsexpand" operation //
-								std::cout << "lhs_expand via Axiom_" << guid/*.str()*/ << std::endl;
+								std::cout << "lhs_expand via Axiom_" << guid << std::endl;
 								ReturnStatusFlag =
 									Rewrite (TempTheoremStdStrVec[LHS], InAxiomsStdStrVec[guid][RHS], InAxiomsStdStrVec[guid][LHS]);
-								TempAxiomCommitLogStdStrVecRef.emplace_back ("lhs_expand via Axiom_" + guid/*.str()*/);
+								TempAxiomCommitLogStdStrVecRef.emplace_back ("lhs_expand via Axiom_" + std::to_string (guid));
 								break;
 							}
 							case 0x02:
 							{ // "rhsreduce" operation //
-								std::cout << "rhs_reduce via Axiom_" << guid/*.str()*/ << std::endl;
+								std::cout << "rhs_reduce via Axiom_" << guid << std::endl;
 								ReturnStatusFlag =
 									Rewrite (TempTheoremStdStrVec[RHS], InAxiomsStdStrVec[guid][LHS], InAxiomsStdStrVec[guid][RHS]);
-								TempAxiomCommitLogStdStrVecRef.emplace_back ("rhs_reduce via Axiom_" + guid/*.str()*/);
+								TempAxiomCommitLogStdStrVecRef.emplace_back ("rhs_reduce via Axiom_" + std::to_string (guid));
 								break;
 							}
 							case 0x03:
 							{ // "rhsexpand" operation //
-								std::cout << "rhs_expand via Axiom_" << guid/*.str()*/ << std::endl;
+								std::cout << "rhs_expand via Axiom_" << guid << std::endl;
 								ReturnStatusFlag =
 									Rewrite (TempTheoremStdStrVec[RHS], InAxiomsStdStrVec[guid][RHS], InAxiomsStdStrVec[guid][LHS]);
-								TempAxiomCommitLogStdStrVecRef.emplace_back ("rhs_expand via Axiom_" + guid/*.str()*/);
+								TempAxiomCommitLogStdStrVecRef.emplace_back ("rhs_expand via Axiom_" + std::to_string (guid));
 								break;
 							}
 							default:
@@ -835,9 +850,12 @@ namespace Euclid_Prover
 			} else {
 
 				// Add new rewrites to the task queue //
-				for (const std::vector<BigInt128_t>& Axiom : Axioms_UInt64Vec)
+				const auto theoremLHS = Theorem[LHS];
+				const auto theoremRHS = Theorem[RHS];
+
+				for (const auto& Axiom : Axioms_UInt64Vec)
 				{
-					if (Theorem[LHS] % Axiom[LHS] == 0)
+					if (theoremLHS % Axiom[LHS] == 0)
 					{
 						std::vector<BigInt128_t> Theorem_0000{ Theorem };
 						Theorem_0000[LHS] = Theorem_0000[LHS] / Axiom[LHS] * Axiom[RHS];
@@ -848,7 +866,7 @@ namespace Euclid_Prover
 						Tasks_Thread.push(Theorem_0000);
 					}
 
-					if (Theorem[LHS] % Axiom[RHS] == 0)
+					if (theoremLHS % Axiom[RHS] == 0)
 					{
 						std::vector<BigInt128_t> Theorem_0001{ Theorem };
 						Theorem_0001[LHS] = Theorem_0001[LHS] / Axiom[RHS] * Axiom[LHS];
@@ -859,7 +877,7 @@ namespace Euclid_Prover
 						Tasks_Thread.push(Theorem_0001);
 					}
 
-					if (Theorem[RHS] % Axiom[LHS] == 0)
+					if (theoremRHS % Axiom[LHS] == 0)
 					{
 						std::vector<BigInt128_t> Theorem_0002{ Theorem };
 						Theorem_0002[RHS] = Theorem_0002[RHS] / Axiom[LHS] * Axiom[RHS];
@@ -870,8 +888,7 @@ namespace Euclid_Prover
 						Tasks_Thread.push(Theorem_0002);
 					}
 
-					if
-						(Theorem[RHS] % Axiom[RHS] == 0)
+					if (theoremRHS % Axiom[RHS] == 0)
 					{
 						std::vector<BigInt128_t> Theorem_0003{ Theorem };
 						Theorem_0003[RHS] = Theorem_0003[RHS] / Axiom[RHS] * Axiom[LHS];
