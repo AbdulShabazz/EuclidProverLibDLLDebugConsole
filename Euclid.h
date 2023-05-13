@@ -162,6 +162,8 @@
 			}
 		);
 
+		const bool ProofFound_Flag =
+
 		Euclid.Prove
 		(
 			{ "{", "PlayerCharacterSideKick", "}", "IsIn", "{", "QuadUtilityVehicle", "}" }, // rhs
@@ -170,16 +172,12 @@
 			ProofStep // Storage for the Result
 		);
 
-		while (!Euclid.StatusReady)
-		{
-		// Wait for thread to finish
-		}
-
-		if (Euclid.ProofFoundFlag)
+		if (ProofFound_Flag)
 		{
 			std::cout << "Proof found:" << std::endl;
 			Euclid.PrintPath(ProofStep);
-		} else if (ProofStep.size())
+		}
+		else if (ProofStep.size())
 		{
 			std::cout << "Partial Proof found:\n" << std::endl;
 			Euclid.PrintPath(ProofStep);
@@ -244,7 +242,7 @@ namespace Euclid_Prover
 		{"]", 17}
 	};
 
-	uint64_t PrimeCompositeVecSize_UInt64{ 7 };
+	std::size_t PrimeCompositeVecSize_UInt64{ 7 };
 
 	std::vector<BigInt128_t> PrimeComposite_UInt64Vec{ 2, 3, 5, 7, 11, 13, 17 };
 
@@ -259,7 +257,7 @@ namespace Euclid_Prover
 	*/
 	BigInt128_t Prime()
 	{
-		const uint64_t Index_UInt64 = PrimeCompositeVecSize_UInt64++;
+		const std::size_t Index_UInt64 = PrimeCompositeVecSize_UInt64++;
 		for (BigInt128_t i = PrimeComposite_UInt64Vec.back() + 2; PrimeComposite_UInt64Vec.size() < PrimeCompositeVecSize_UInt64; i += 2)
 		{
 			bool Add_Flag{ true };
@@ -508,8 +506,8 @@ namespace Euclid_Prover
 		};
 		*/
 
-		uint64_t MaxAllowedProofs_UInt64{ 1 };
-		uint64_t TotalProofsFound_UInt64{};
+		std::size_t MaxAllowedProofs_UInt64{ 1 };
+		std::size_t TotalProofsFound_UInt64{};
 
 		std::unordered_map<
 		std::string,
@@ -600,9 +598,9 @@ namespace Euclid_Prover
 					std::vector<
 						std::string> result{};
 
-					uint64_t i{};
+					std::size_t i{};
 
-					const uint64_t I{ from.size () };
+					const std::size_t I{ from.size () };
 
 					for (const auto& val : th)
 					{
@@ -736,15 +734,15 @@ namespace Euclid_Prover
 					The second value read out, is an index into InAxiomsStdStrVec.
 					*/
 
-					uint64_t i { ProofStackUInt64 };
+					std::size_t i { ProofStackUInt64 };
 
 					while (i < InTheoremUInt64.size ())
 					{
 						if (!ReturnStatusFlag)
 							return ReturnStatusFlag;
 
-						const uint64_t& opcode = uint64_t{ InTheoremUInt64[i++] };
-						const uint64_t& guid = uint64_t{ InTheoremUInt64[i++] - 1 };
+						const std::size_t& opcode = std::size_t{ InTheoremUInt64[i++] };
+						const std::size_t& guid = std::size_t{ InTheoremUInt64[i++] - 1 };
 
 						//TempTheoremStdStrVec = OutTheoremStdStrVec.back();
 
