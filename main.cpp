@@ -81,7 +81,7 @@ int main()
 
         ProofStep_4DStdStrVec,
         AxiomCommitLog_StdStrVec
-        );
+    );
 
     while (!Euclid.StatusReady)
     {
