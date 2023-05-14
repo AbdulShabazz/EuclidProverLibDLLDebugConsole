@@ -2,6 +2,8 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <chrono>
+#include <thread>
 #include <Euclid.h>
 
 int main()
@@ -83,24 +85,25 @@ int main()
         AxiomCommitLog_StdStrVec
     );
 
-    while (!Euclid.StatusReady)
-    {
-        //std::cout << "Performing some other work..." << std::endl;
-        std::this_thread::sleep_for(std::chrono::seconds(1));
-    }
+    std::cout << "Performing some other work..." << std::endl; // std::this_thread::sleep_for(std::chrono::seconds(1));
 
-    if (Euclid.ProofFoundFlag)
+    if (Euclid.StatusReady())
     {
-        std::cout << "Proof Found." << std::endl;
-        ProofStep_4DStdStrVec;
-        AxiomCommitLog_StdStrVec;
-    } else if (ProofStep_4DStdStrVec.size()) {
-        std::cout << "Partial Proof Found." << std::endl;
-        ProofStep_4DStdStrVec;
-        AxiomCommitLog_StdStrVec;
+        if (Euclid.ProofFoundFlag)
+        {
+            std::cout << "Proof Found." << std::endl;
+            ProofStep_4DStdStrVec;
+            AxiomCommitLog_StdStrVec;
+        } else if (ProofStep_4DStdStrVec.size ()) {
+            std::cout << "Partial Proof Found." << std::endl;
+            ProofStep_4DStdStrVec;
+            AxiomCommitLog_StdStrVec;
+        } else {
+            std::cout << "No Proof Found." << std::endl;
+        }
     } else {
-        std::cout << "No Proof Found." << std::endl;
-    }
+		std::cout << "No Proof Found." << std::endl;
+	}
 
     std::cout << std::endl;
     const auto end_time_chrono = std::chrono::high_resolution_clock::now();
