@@ -682,7 +682,7 @@ namespace Euclid_Prover
 			__stdtraceout__("PopulateAxiomCallGraph");
 		};
 
-		//PopulateAxiomCallGraph(AxiomCallGraphMap);
+		PopulateAxiomCallGraph(AxiomCallGraphMap);
 
 		std::priority_queue<
 		std::vector<
@@ -952,8 +952,8 @@ namespace Euclid_Prover
 
 				std::vector<std::string> TempAxiomCommitLog_StdStrVec {};
 
-				QED = true;
-				break;
+				//QED = true;
+				//break;
 				
 				std::vector<
 				std::vector<
@@ -995,12 +995,12 @@ namespace Euclid_Prover
 
 				for (const auto& Axiom : Axioms_UInt64Vec)
 				{
-					//const bool AxiomCallGraphRouteFoundFlag =
-						//AxiomCallGraphMap[Theorem[guid_UInt64]][Axiom[guid_UInt64]] == true;
+					const bool AxiomCallGraphRouteFoundFlag =
+						AxiomCallGraphMap[Theorem[guid_UInt64]][Axiom[guid_UInt64]] == true;
 
-					//if (!AxiomCallGraphRouteFoundFlag)
-						//continue;
-						// 
+					if (!AxiomCallGraphRouteFoundFlag)
+						continue;
+						 
 					//const bool CallHistoryFoundFlag = 
 						//CallHistory[Theorem[guid_UInt64]][Axiom[guid_UInt64]] == true;
 
