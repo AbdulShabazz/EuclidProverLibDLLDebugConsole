@@ -7,7 +7,7 @@
 #include <locale>
 #include <iomanip>
 #include <thread>
-#include <Euclid.h>
+#include <Euclid.4.h>
 
 std::string format_with_commas(std::chrono::nanoseconds ns)
 {
@@ -365,6 +365,7 @@ int main()
 
     std::cout << "Performing some other work..." << std::endl; // std::this_thread::sleep_for(std::chrono::seconds(1));
 
+    /*
     if (Euclid.StatusReady())
     {
         if (Euclid.ProofFoundFlag)
@@ -380,8 +381,27 @@ int main()
             std::cout << "No Proof Found." << std::endl;
         }
     } else {
-		std::cout << "No Proof Found." << std::endl;
-	}
+        std::cout << "No Proof Found." << std::endl;
+    }
+    */
+
+    while (!Euclid.StatusReadyFlag)
+    {
+        std::this_thread::yield();
+    }
+
+    if (Euclid.ProofFoundFlag)
+    {
+        std::cout << "Proof Found." << std::endl;
+        ProofStep_4DStdStrVec;
+        AxiomCommitLog_StdStrVec;
+    } else if (ProofStep_4DStdStrVec.size()) {
+        std::cout << "Partial Proof Found." << std::endl;
+        ProofStep_4DStdStrVec;
+        AxiomCommitLog_StdStrVec;
+    } else {
+        std::cout << "No Proof Found." << std::endl;
+    }
 
     std::cout << std::endl;
     const auto end_time_chrono = std::chrono::high_resolution_clock::now();
