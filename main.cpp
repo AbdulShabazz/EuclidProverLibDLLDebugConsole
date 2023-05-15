@@ -9,14 +9,6 @@
 #include <thread>
 #include <Euclid.4.h>
 
-std::string format_with_commas(std::chrono::nanoseconds ns)
-{
-    std::stringstream ss;
-    ss.imbue(std::locale(""));
-    ss << std::fixed << ns.count();
-    return ss.str();
-}
-
 int main()
 {
     using EuclidProverClass =
