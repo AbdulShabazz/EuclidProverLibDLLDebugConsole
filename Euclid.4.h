@@ -589,7 +589,7 @@ namespace Euclid_Prover
 			29, // "4" (RHS)
 			0, // guid_UInt64;
 			0, // last_UInt64 == "_root"
-			null, ...start of ProofStack_UInt64Vec
+			--, // ProofStack_UInt64Vec
 		};
 
 		std::vector<std::vector<BigInt128_t>> Axioms_UInt64Vec =
@@ -610,100 +610,6 @@ namespace Euclid_Prover
 
 		std::size_t MaxAllowedProofs_UInt64{ 1 };
 		std::size_t TotalProofsFound_UInt64{};
-		
-		// Prevent next round call loops to further improve Performance //
-		std::unordered_map<BigInt128_t,
-		std::unordered_map<BigInt128_t, bool>>
-
-		CallHistory{},
-		NextRoundCallHistory{};
-
-		std::unordered_map<
-		BigInt128_t,
-		std::unordered_map<
-		BigInt128_t,
-		bool>>
-		AxiomCallGraphMap;
-    
-		/**
-		PopulateAxiomCallGraph
-		(
-			std::unordered_map<
-			/*BigInt128_t/
-			std::size_t,
-			std::unordered_map<
-			/*BigInt128_t/
-			std::size_t,
-			bool>>&
-			InAxiomCallGraphMap
-		)
-
-		Description: Adds qualifying axiom subnet netlists to the outbound route map.
-
-		The modulus (%) operator which checks for divisibility requires 40-70 CPU microinstructions
-		so it is more efficient to perform this expensive operation once.
-
-		Note: The following indirection labels are arbitrary: The chief goal is a standard sytem and method which adequately describes
-		the indirection of incoming & outgoing subnets. Reduce : LHS ==> RHS; Expand : LHS <== RHS.
-		*/
-		auto PopulateAxiomCallGraph =
-			[&]
-		(
-			std::unordered_map<
-			BigInt128_t,
-			std::unordered_map<
-			BigInt128_t,
-			bool>>&
-			InAxiomCallGraphMap
-			)
-		{
-			__stdtracein__("PopulateAxiomCallGraph");
-			for (const std::vector<BigInt128_t>& Axiom_i : Axioms_UInt64Vec)
-			{
-				if
-					(
-						//!InAxiomCallGraphMap[Theorem_UInt64Vec[guid_UInt64]][Axiom_i[guid_UInt64]] &&
-						(
-							Theorem_UInt64Vec[LHS] % Axiom_i[LHS] == 0 ||
-							Theorem_UInt64Vec[LHS] % Axiom_i[RHS] == 0 ||
-							Theorem_UInt64Vec[RHS] % Axiom_i[LHS] == 0 ||
-							Theorem_UInt64Vec[RHS] % Axiom_i[RHS] == 0
-						)
-					)
-				{
-					InAxiomCallGraphMap[Theorem_UInt64Vec[guid_UInt64]][Axiom_i[guid_UInt64]] = true;
-
-					__stdlog__({ "InAxiomCallGraphMap[Theorem_UInt64Vec_" + Theorem_UInt64Vec[guid_UInt64].str() + "][Axiom_" + Axiom_i[guid_UInt64].str() + "] =",
-					std::to_string(InAxiomCallGraphMap[Theorem_UInt64Vec[guid_UInt64]][Axiom_i[guid_UInt64]]) });
-				}
-
-				for (const std::vector<BigInt128_t>& Axiom_j : Axioms_UInt64Vec)
-				{
-					if (Axiom_i[guid_UInt64] == Axiom_j[guid_UInt64])
-						continue;
-
-					if
-						(
-							//!InAxiomCallGraphMap[Axiom_i[guid_UInt64]][Axiom_j[guid_UInt64]] &&
-							(
-								Axiom_i[LHS] % Axiom_j[LHS] == 0 ||
-								Axiom_i[LHS] % Axiom_j[RHS] == 0 ||
-								Axiom_i[RHS] % Axiom_j[LHS] == 0 ||
-								Axiom_i[RHS] % Axiom_j[RHS] == 0
-							)
-						)
-					{
-						InAxiomCallGraphMap[Axiom_i[guid_UInt64]][Axiom_j[guid_UInt64]] = true;
-
-						__stdlog__({ "InAxiomCallGraphMap[Axiom_" + Axiom_i[guid_UInt64].str() + "][Axiom_" + Axiom_j[guid_UInt64].str() + "] =",
-						std::to_string(InAxiomCallGraphMap[Axiom_i[guid_UInt64]][Axiom_j[guid_UInt64]]) });
-					}
-				} // end for (...Axiom_j : Axioms_UInt64Vec)
-			} // end for (...Axiom_i : Axioms_UInt64Vec)
-			__stdtraceout__("PopulateAxiomCallGraph");
-		};
-
-		//PopulateAxiomCallGraph(AxiomCallGraphMap);
 
 		std::priority_queue<
 		std::vector<
@@ -1011,20 +917,6 @@ namespace Euclid_Prover
 
 				for (const auto& Axiom : Axioms_UInt64Vec)
 				{
-					//const bool AxiomCallGraphRouteFoundFlag =
-						//AxiomCallGraphMap[Theorem[guid_UInt64]][Axiom[guid_UInt64]] == true;
-
-					//if (!AxiomCallGraphRouteFoundFlag)
-						//continue;
-						 
-					//const bool CallHistoryFoundFlag = 
-						//CallHistory[Theorem[guid_UInt64]][Axiom[guid_UInt64]] == true;
-
-					//if (CallHistoryFoundFlag)
-						//continue;
-
-					//NextRoundCallHistory[Theorem[guid_UInt64]][Axiom[guid_UInt64]] = true;
-
 					const auto& AxiomLHS = Axiom[LHS];
 					const auto& AxiomRHS = Axiom[RHS];
 
@@ -1075,8 +967,6 @@ namespace Euclid_Prover
 
 						Tasks_Thread.push(Theorem_0003);
 					}
-
-					//CallHistory = NextRoundCallHistory;
 
 					__stdlog__({ "" });
 				} // end for (...Axiom : InAxiomsStdStrVec)
@@ -1371,7 +1261,6 @@ namespace Euclid_Prover
 			};
 			*/
 			th = std::async
-			//th = std::thread
 			(
 				std::launch::async,
 				__Prove__,
@@ -1425,9 +1314,6 @@ namespace Euclid_Prover
 		bool StatusReady ()
 		{
 			__stdtracein__ ("StatusReady");
-			
-			//if (th.joinable())
-				//th.join();
 			
 			th.get();
 			__stdtraceout__ ("StatusReady");
