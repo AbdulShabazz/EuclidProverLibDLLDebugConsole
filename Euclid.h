@@ -15,9 +15,9 @@ void __stdtracein__(const std::string& msg)
 	// Check if the iostream library is included.
 #ifdef IOSTREAM_INCLUDED
 	TraceCallStackStdStrVec.emplace_back(msg);
-	const uint64_t I = TraceCallStackStdStrVec.size();
+	const std::size_t I = TraceCallStackStdStrVec.size();
 	std::cout << TraceCallStackStdStrVec[0];
-	for (uint64_t i = 1; i < I; ++i)
+	for (std::size_t i = 1; i < I; ++i)
 	{
 		std::cout << " >> " << TraceCallStackStdStrVec[i];
 	}
@@ -30,9 +30,9 @@ void __stdtraceout__(const std::string& msg)
 	// Check if the iostream library is included.
 #ifdef IOSTREAM_INCLUDED
 	TraceCallStackStdStrVec.pop_back();
-	const uint64_t I = TraceCallStackStdStrVec.size();
+	const std::size_t I = TraceCallStackStdStrVec.size();
 	std::string buff{ TraceCallStackStdStrVec[0] };
-	for (uint64_t i = 1; i < I; ++i)
+	for (std::size_t i = 1; i < I; ++i)
 	{
 		buff.append(" >> " + TraceCallStackStdStrVec[i]);
 	}
@@ -291,7 +291,7 @@ void __stdlog__(const std::initializer_list<std::string>& msg, const bool AddNew
 
 	```
 
-  TEST CASE 246: nanoseconds elapsed: 0.0000
+  TEST CASE 246: nanoseconds elapsed: 147524900
 
   REFERENCES
 	  OpenAI GPT-4-32k-0314 ( { max_tokens:32000, temperature:1.0, top_p:1.0, N:1,
@@ -334,7 +334,7 @@ namespace Euclid_Prover
 		{"]", 17}
 	};
 
-	uint64_t PrimeCompositeVecSize_UInt64{ 7 };
+	std::size_t PrimeCompositeVecSize_UInt64{ 7 };
 
 	std::vector<BigInt128_t> PrimeComposite_UInt64Vec{ 2, 3, 5, 7, 11, 13, 17 };
 
@@ -350,7 +350,7 @@ namespace Euclid_Prover
 	BigInt128_t Prime()
 	{
 		__stdtracein__("Euclid_Prover::Prime");
-		const uint64_t Index_UInt64 = PrimeCompositeVecSize_UInt64++;
+		const std::size_t Index_UInt64 = PrimeCompositeVecSize_UInt64++;
 		for (BigInt128_t i = PrimeComposite_UInt64Vec.back() + 2; PrimeComposite_UInt64Vec.size() < PrimeCompositeVecSize_UInt64; i += 2)
 		{
 			bool Add_Flag{ true };
@@ -606,8 +606,8 @@ namespace Euclid_Prover
 		};
 		*/
 
-		uint64_t MaxAllowedProofs_UInt64{ 1 };
-		uint64_t TotalProofsFound_UInt64{};
+		std::size_t MaxAllowedProofs_UInt64{ 1 };
+		std::size_t TotalProofsFound_UInt64{};
 
 		// Prevent next round call loops to further improve Performance //
 		std::unordered_map<BigInt128_t,
@@ -628,10 +628,10 @@ namespace Euclid_Prover
 		(
 			std::unordered_map<
 			/*BigInt128_t/
-			uint64_t,
+			std::size_t,
 			std::unordered_map<
 			/*BigInt128_t/
-			uint64_t,
+			std::size_t,
 			bool>>&
 			InAxiomCallGraphMap
 		)
@@ -660,7 +660,7 @@ namespace Euclid_Prover
 			{
 				if
 					(
-						!InAxiomCallGraphMap[Theorem_UInt64Vec[guid_UInt64]][Axiom_i[guid_UInt64]] &&
+						//!InAxiomCallGraphMap[Theorem_UInt64Vec[guid_UInt64]][Axiom_i[guid_UInt64]] &&
 						(
 							Theorem_UInt64Vec[LHS] % Axiom_i[LHS] == 0 ||
 							Theorem_UInt64Vec[LHS] % Axiom_i[RHS] == 0 ||
@@ -682,7 +682,7 @@ namespace Euclid_Prover
 
 					if
 						(
-							!InAxiomCallGraphMap[Axiom_i[guid_UInt64]][Axiom_j[guid_UInt64]] &&
+							//!InAxiomCallGraphMap[Axiom_i[guid_UInt64]][Axiom_j[guid_UInt64]] &&
 							(
 								Axiom_i[LHS] % Axiom_j[LHS] == 0 ||
 								Axiom_i[LHS] % Axiom_j[RHS] == 0 ||
@@ -701,7 +701,7 @@ namespace Euclid_Prover
 			__stdtraceout__("PopulateAxiomCallGraph");
 		};
 
-		PopulateAxiomCallGraph(AxiomCallGraphMap);
+		//PopulateAxiomCallGraph(AxiomCallGraphMap);
 
 		std::priority_queue<
 			std::vector<
@@ -764,9 +764,9 @@ namespace Euclid_Prover
 					std::vector<
 						std::string> result{};
 
-					uint64_t i{};
+					std::size_t i{};
 
-					const uint64_t I{ from.size() };
+					const std::size_t I{ from.size() };
 
 					for (const auto& val : th)
 					{
@@ -893,29 +893,24 @@ namespace Euclid_Prover
 
 					/**
 					Loop through Theorem, starting at Theorem[ProofStackUInt64],
-					and read two values from the vector at a time.
+					and read a pair of values from the vector:
 
-					The first value read out, is an opcode whose hexadecimal value
-					ranges from 0x00 to 0x03:
+					The first value, is an opcode whose hexadecimal value
+					ranges from 0x00 to 0x03 (See above for further explanation)
 
-					0x00: _lhs _reduce operation
-					0x01: _lhs _expand operation
-					0x02: _rhs _reduce operation
-					0x03: _rhs _expand operation
-
-					The second value read out, is an index into InAxiomsStdStrVec,
-					where N is Axiom_N.
+					The second value, is an index into InAxiomsStdStrVec,
+					where guid is Axiom_[guid].
 					*/
 
-					uint64_t i{ ProofStackUInt64 };
+					std::size_t i{ ProofStackUInt64 };
 
 					while (i < InTheoremUInt64.size())
 					{
 						if (!ReturnStatusFlag)
 							return ReturnStatusFlag;
 
-						const uint64_t& opcode = uint64_t{ InTheoremUInt64[i++] };
-						const uint64_t& guid = uint64_t{ InTheoremUInt64[i++] - 1 };
+						const std::size_t& opcode = std::size_t{ InTheoremUInt64[i++] };
+						const std::size_t& guid = std::size_t{ InTheoremUInt64[i++] - 1 };
 
 						//TempTheoremStdStrVec = OutTheoremStdStrVec.back();
 
