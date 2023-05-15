@@ -162,7 +162,8 @@
       </Command>
     </PostBuildEvent>
     <PreBuildEvent>
-      <Command>AddEuclidProverLibDLL.bat</Command>
+      <Command>AddEuclidProverLibDLL.bat
+</Command>
       <Message>Copy over the latest EuclidProverLibDLL from the Euclid project</Message>
     </PreBuildEvent>
     <PreLinkEvent>
