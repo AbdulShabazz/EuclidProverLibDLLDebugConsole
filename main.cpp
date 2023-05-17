@@ -7,7 +7,7 @@
 #include <locale>
 #include <iomanip>
 #include <thread>
-#include <Euclid.9.h>
+#include <Euclid.h>
 
 int main()
 {
