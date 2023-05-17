@@ -618,6 +618,7 @@ namespace Euclid_Prover
 		Tasks_Thread.push(Theorem_UInt64Vec);
 
 		// Todo: Develop an artificial neural network that can infer solutions and their proofsteps from an axiom's CallGraph 
+		// Todo: Add a metric penalty for employing certain axioms or chains of proofsteps (eg. traversal through mountains vs fording a river)
 		// Todo: Add Remove, SendOffline operations for Axioms
 		// Todo: Add Resume, Suspend operations for Proofs
 		// Todo: Create a proof-statement hash which can be used as a file handle to a proofstep solution when it posts to a file (stateless)
