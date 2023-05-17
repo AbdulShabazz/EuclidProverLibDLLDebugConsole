@@ -291,7 +291,7 @@ void __stdlog__(const std::initializer_list<std::string>& msg, const bool AddNew
 
 	```
 
-  TEST CASE 246: nanoseconds elapsed: 147524900
+  TEST CASE 246: nanoseconds elapsed: 149517400
 
   REFERENCES
 	  OpenAI GPT-4-32k-0314 ( { max_tokens:32000, temperature:1.0, top_p:1.0, N:1,
@@ -618,7 +618,7 @@ namespace Euclid_Prover
 		Tasks_Thread.push(Theorem_UInt64Vec);
 
 		// Todo: Develop an artificial neural network that can infer solutions and their proofsteps from an axiom's CallGraph 
-		// Todo: Add a metric penalty for employing certain axioms or chains of proofsteps (eg. traversal through mountains vs fording a river)
+		// Todo: Add a distance metric or (performance) penalty for employing certain axioms or chains of proofsteps (eg. traversal through mountains vs fording a river)
 		// Todo: Add Remove, SendOffline operations for Axioms
 		// Todo: Add Resume, Suspend operations for Proofs
 		// Todo: Create a proof-statement hash which can be used as a file handle to a proofstep solution when it posts to a file (stateless)
@@ -662,6 +662,7 @@ namespace Euclid_Prover
 				{
 					__stdtracein__("Rewrite");
 					bool bSuccessFlag{};
+					bool bLocalSubnetFoundFlag{};
 
 					if (th.size () < from.size ())
 						return false;
@@ -681,13 +682,15 @@ namespace Euclid_Prover
 					{
 						__stdlog__({ "Next val: ", val });
 
-						if (!bSuccessFlag && val == from[i])
+						if (!bLocalSubnetFoundFlag && val == from[i])
 						{
 							++i;
 
 							__stdlog__({ "Match found: ", val, " >> " }, false);
 
-							if (i == I)
+							bLocalSubnetFoundFlag = (i == I);
+
+							if (bLocalSubnetFoundFlag)
 							{
 								for (const auto& u2 : to)
 								{
