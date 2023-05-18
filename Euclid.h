@@ -301,7 +301,7 @@ void __stdlog__(const std::initializer_list<std::string>& msg, const bool AddNew
 			frequency_penalty:0, best_of:1, logit_bias:NULL } )
 
   COMPATIBILITY
-	  Windows 11+ x86i64
+	  Windows 11+ x86i64 platform with dedicated Coprocessors-, Accelerators-, FPGAs-, and or GPUs
 
 */
 
