@@ -319,7 +319,6 @@ void __stdlog__(const std::initializer_list<std::string>& msg, const bool AddNew
 #include <future>
 #include <algorithm>
 #include <iterator>
-#include <shared_mutex>
 #include <boost/multiprecision/cpp_int.hpp> 
 
 namespace Euclid_Prover
@@ -941,7 +940,7 @@ namespace Euclid_Prover
 				const auto& theoremLHS = Theorem[LHS];
 				const auto& theoremRHS = Theorem[RHS];
 
-				std::shared_mutex lhsMutex, rhsMutex, tasksMutex, ffMutex;
+				//std::shared_mutex lhsMutex, rhsMutex, tasksMutex, ffMutex;
 
 				for (const auto& Axiom : Axioms_UInt64Vec)
 				{
