@@ -8,6 +8,34 @@
 #include <iomanip>
 #include <thread>
 #include <Euclid.h>
+//#include <Euclid.13.Boost.cpp_int.h>
+
+/*
+#include <string>
+#include <chrono>
+//#include <Euclid.h>
+
+int main()
+{
+    Euclid_Prover::__stdtracein__("Main");
+
+    const auto start_time_chrono = std::chrono::high_resolution_clock::now();
+
+    Euclid_Prover::Prove();
+
+    std::cout << std::endl;
+    const auto end_time_chrono = std::chrono::high_resolution_clock::now();
+    const auto duration_chrono = std::chrono::duration_cast<std::chrono::nanoseconds>( end_time_chrono - start_time_chrono ).count();
+    std::cout << "Total Duration (nanoseconds): " << duration_chrono << std::endl;
+
+    Euclid_Prover::__stdtraceout__("Main");
+
+    std::string Hold_for_user_input{};
+    std::cin >> Hold_for_user_input;
+
+    return EXIT_SUCCESS;
+}
+*/
 
 int main()
 {
@@ -20,7 +48,12 @@ int main()
     EuclidProverClass Euclid;
 
     Euclid.Axioms
-    (
+    (   /*
+        {
+            {{ "1", "+", "1" }, { "2" }},
+            {{ "2", "+", "2" }, { "4" }}
+        }*/
+    
         {
 { { "1", "+", "1" }, { "2" } },
 { { "1", "+", "2" }, { "3" } },
@@ -300,20 +333,22 @@ int main()
         std::vector<
         std::string>>>>
 
-        // Instantiate ProofStep_4DStdStrVec[proof][step][lhs/rhs][token]
-        ProofStep_4DStdStrVec;
+        // Instantiate ProofStep[proof][step][lhs/rhs][token]
+        ProofStep4DStdStrVec;
 
     std::vector<
         std::vector<
         std::string>>
 
-        // Instantiate AxiomCommitLog_StdStrVec[proof][step]
-        AxiomCommitLog_StdStrVec;
+        // Instantiate AxiomCommitLog[proof][step]
+        AxiomCommitLogStdStrVec;
 
     const auto start_time_chrono = std::chrono::high_resolution_clock::now();
 
     Euclid.Prove
     (
+        /*{{"1", "+", "1", "+", "1", "+", "1"}, {"4"}}, */
+    
         {
      {
          "1", "+", "1", "+", "1", "+", "1", "+", "1", "+", "1", "+", "1", "+", "1", "+", "1", "+",
@@ -348,11 +383,11 @@ int main()
      {
          "246"
      } // rhs
-        }
-    ,
+        },
+        
 
-        ProofStep_4DStdStrVec,
-        AxiomCommitLog_StdStrVec
+        ProofStep4DStdStrVec,
+        AxiomCommitLogStdStrVec
     );
 
     std::cout << "Performing some other work..." << std::endl; // std::this_thread::sleep_for(std::chrono::seconds(1));
@@ -363,12 +398,12 @@ int main()
         if (Euclid.ProofFoundFlag)
         {
             std::cout << "Proof Found." << std::endl;
-            ProofStep_4DStdStrVec;
-            AxiomCommitLog_StdStrVec;
-        } else if (ProofStep_4DStdStrVec.size ()) {
+            ProofStep4DStdStrVec;
+            AxiomCommitLogStdStrVec;
+        } else if (ProofStep4DStdStrVec.size ()) {
             std::cout << "Partial Proof Found." << std::endl;
-            ProofStep_4DStdStrVec;
-            AxiomCommitLog_StdStrVec;
+            ProofStep4DStdStrVec;
+            AxiomCommitLogStdStrVec;
         } else {
             std::cout << "No Proof Found." << std::endl;
         }
@@ -384,13 +419,13 @@ int main()
 
     if (Euclid.ProofFoundFlag)
     {
-        std::cout << "Proof Found." << std::endl;
-        ProofStep_4DStdStrVec;
-        AxiomCommitLog_StdStrVec;
-    } else if (ProofStep_4DStdStrVec.size()) {
+        std::cout << "Proof Found. (QED)" << std::endl;
+        ProofStep4DStdStrVec;
+        Euclid.PrintPath(AxiomCommitLogStdStrVec);
+    } else if (ProofStep4DStdStrVec.size()) {
         std::cout << "Partial Proof Found." << std::endl;
-        ProofStep_4DStdStrVec;
-        AxiomCommitLog_StdStrVec;
+        ProofStep4DStdStrVec;
+        Euclid.PrintPath(AxiomCommitLogStdStrVec);
     } else {
         std::cout << "No Proof Found." << std::endl;
     }
@@ -410,7 +445,7 @@ int main()
 /*
 Output:
 
-ProofStep_4DStdStrVec:
+ProofStep4DStdStrVec:
 {
   {
     // Step 1 (Original).
@@ -439,7 +474,7 @@ ProofStep_4DStdStrVec:
   }
 }
 
-AxiomCommitLog_StdStrVec:
+AxiomCommitLogStdStrVec:
 {
   {
     "rhs_expand via Axiom_2",
