@@ -47,7 +47,7 @@ namespace Euclid_Prover {
         std::cout << TraceCallStackStdStrVec[0];
         for (BigInt512_t i = 1; i < I; ++i)
         {
-            std::cout << " > " << TraceCallStackStdStrVec[i];
+            std::cout << " > " << TraceCallStackStdStrVec[std::size_t{ i }];
         }
         std::cout << std::endl;
 #endif
@@ -62,7 +62,7 @@ namespace Euclid_Prover {
         std::string buff{ TraceCallStackStdStrVec[0] };
         for (BigInt512_t i = 1; i < I; ++i)
         {
-            buff.append(" > " + TraceCallStackStdStrVec[i]);
+            buff.append(" > " + TraceCallStackStdStrVec[std::size_t{ i }]);
         }
         std::cout << buff << " < " << msg << std::endl;
         std::cout << buff << std::endl;
@@ -167,7 +167,12 @@ namespace Euclid_Prover {
         std::vector<std::vector<std::vector<std::string>>> InProofLibrary3DStdStrVec =
 
         {
+            /*
             // {{lhs},{rhs}} //
+            {{"1","+","1","+","1","+","1"},{"4"}}, // Theorem_0 //	
+            {{"1","+","1"},{"2"}},	// Axiom_1 //	
+            {{"2","+","2"},{"4"}},	// Axiom_2 //
+            */
             {
      {
          "1", "+", "1", "+", "1", "+", "1", "+", "1", "+", "1", "+", "1", "+", "1", "+", "1", "+",
@@ -526,7 +531,7 @@ namespace Euclid_Prover {
 
                         Tasks_Thread.push(TempProofStep3DStdStrVec_0000);
                     }
-
+                    /*
                     if (lhs_expand_flag = SubnetFound(Theorem[LHS], Axiom[RHS], Axiom[LHS], Theorem_0001[LHS]))
                     {
                         Theorem_0001[opcode_field][opcode] = OpcodeStruct.lhs_expand + " via: ";
@@ -565,7 +570,7 @@ namespace Euclid_Prover {
 
                     // Advanced Rewrites //
 
-                    if (lhs_reduce_flag && rhs_reduce_flag)
+                    if (lhs_reduce_flag && rhs_reduce_flag) 
                     {
                         Theorem_0004[opcode_field][opcode] = OpcodeStruct.lhs_reduce + " + " + OpcodeStruct.rhs_reduce + " via: ";
                         Theorem_0004[opcode_field][axiom_label] = axiom_name;
@@ -624,7 +629,7 @@ namespace Euclid_Prover {
 
                         Tasks_Thread.push(TempProofStep3DStdStrVec_0007);
                     }
-
+                    */
                 } // end for(...InProofLibrary3DStdStrVec)
 
             } // end if (Theorem[LHS] == Theorem[RHS])
