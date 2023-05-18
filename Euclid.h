@@ -319,6 +319,7 @@ void __stdlog__(const std::initializer_list<std::string>& msg, const bool AddNew
 #include <future>
 #include <algorithm>
 #include <iterator>
+#include <shared_mutex>
 #include <boost/multiprecision/cpp_int.hpp> 
 
 namespace Euclid_Prover
@@ -628,10 +629,11 @@ namespace Euclid_Prover
 
 		Tasks_Thread.push(Theorem_UInt64Vec);
 
-		// Todo: Develop an artificial neural network that can infer solutions and their proofsteps from an axiom's CallGraph 
+		// Todo: Implement thread-safe LHSFastForwardMap, RHSFastForwardMap for parrallel access via atomics
+		// Todo: Develop a proofstep generator that can infer solutions and their proofsteps from an axiom's CallGraph
 		// Todo: Add a distance metric or (performance) penalty for employing certain axioms or chains of proofsteps (eg. traversal through mountains vs fording a river)
-		// Todo: Add Remove, SendOffline operations for Axioms
-		// Todo: Add Resume, Suspend operations for Proofs
+		// Todo: Add Remove, SendOffline support for Axioms
+		// Todo: Add Resume, Suspend support for Proofs
 		// Todo: Create a proof-statement hash which can be used as a file handle to a proofstep solution when it posts to a file (stateless)
 		// Todo: Prevent Tasks_Thread (stack) overflows by including a timeout or deferring unprocessed axiom rewrites to a standby thread
 		
@@ -646,10 +648,7 @@ namespace Euclid_Prover
 			const std::vector<BigInt128_t>
 			Theorem{ bFastForwardFlag ? FastForwardTask_Thread.top() : Tasks_Thread.top() };
 
-			if (bFastForwardFlag)
-				FastForwardTask_Thread.pop();
-			else
-				Tasks_Thread.pop();
+			bFastForwardFlag ? FastForwardTask_Thread.pop() : Tasks_Thread.pop() ;
 
 			bFastForwardFlag = false;
 
@@ -942,6 +941,8 @@ namespace Euclid_Prover
 				const auto& theoremLHS = Theorem[LHS];
 				const auto& theoremRHS = Theorem[RHS];
 
+				std::shared_mutex lhsMutex, rhsMutex, tasksMutex, ffMutex;
+
 				for (const auto& Axiom : Axioms_UInt64Vec)
 				{
 					const auto& AxiomLHS = Axiom[LHS];
@@ -955,30 +956,29 @@ namespace Euclid_Prover
 						Theorem_0000[last_UInt64] = Axiom[guid_UInt64];
 						Theorem_0000.emplace_back(0x00); // Push opcode 0x00 onto the proofstack because we performed a _lhs _reduce operation) //
 						Theorem_0000.emplace_back(Axiom[guid_UInt64]); // Push the Axiom ID onto the proofstack //
-						__stdlog__ ({ "lhs_reduce in Module_0000 via Axiom_", Axiom[guid_UInt64].str(), " {", Theorem_0000[LHS].str(), ", ", Theorem_0000[RHS].str(), "}" });
+						__stdlog__({ "lhs_reduce in Module_0000 via Axiom_", Axiom[guid_UInt64].str(), " {", Theorem_0000[LHS].str(), ", ", Theorem_0000[RHS].str(), "}" });
 
-						// Commit for later fast-forward //
-						if (LHSRouteHistoryMap.find(Theorem_0000[LHS]) == LHSRouteHistoryMap.end())
-							LHSRouteHistoryMap.emplace(Theorem_0000[LHS], Theorem_0000);
+							// Commit for later fast-forward //
+							if (LHSRouteHistoryMap.find(Theorem_0000[LHS]) == LHSRouteHistoryMap.end())
+								LHSRouteHistoryMap.emplace(Theorem_0000[LHS], Theorem_0000);
 
-						// Attempt fast-forward //
-						if (RHSRouteHistoryMap.find(Theorem_0000[LHS]) != RHSRouteHistoryMap.end()) {
-							//std::cout << "Proof found in Module_0000 via Fast-Forward (FF)" << " {" << Theorem_0000[LHS].str() << ", " << Theorem_0000[LHS].str() << "}" << std::endl;
-							__stdlog__({ "Proof found in Module_0000 via Fast-Forward (FF)" });
-							auto opcode = RHSRouteHistoryMap[Theorem_0000[LHS]].begin() + ProofStackUInt64;
-							const auto OPCODE = RHSRouteHistoryMap[Theorem_0000[LHS]].end();
-							for (opcode; opcode != OPCODE; ++opcode)
-								Theorem_0000.emplace_back(*opcode);
-							Theorem_0000[RHS] = Theorem_0000[LHS];
+							// Attempt fast-forward //
+							if (RHSRouteHistoryMap.find(Theorem_0000[LHS]) != RHSRouteHistoryMap.end()) {
+								//std::cout << "Proof found in Module_0000 via Fast-Forward (FF)" << " {" << Theorem_0000[LHS].str() << ", " << Theorem_0000[LHS].str() << "}" << std::endl;
+								__stdlog__({ "Proof found in Module_0000 via Fast-Forward (FF)" });
+								auto opcode = RHSRouteHistoryMap[Theorem_0000[LHS]].begin() + ProofStackUInt64;
+								const auto OPCODE = RHSRouteHistoryMap[Theorem_0000[LHS]].end();
+								for (opcode; opcode != OPCODE; ++opcode)
+									Theorem_0000.emplace_back(*opcode);
+								Theorem_0000[RHS] = Theorem_0000[LHS];
 
-							// Is the FF queue still empty? //
-							if (FastForwardTask_Thread.empty()) {
-								bFastForwardFlag = true;
-								FastForwardTask_Thread.push(Theorem_0000);
+									// Is the FF queue still empty? //
+									if (FastForwardTask_Thread.empty()) {
+										bFastForwardFlag = true;
+										FastForwardTask_Thread.push(Theorem_0000);
+									}
 							}
-						} 
-
-						Tasks_Thread.push(Theorem_0000);
+							Tasks_Thread.push(Theorem_0000);
 					}
 
 					if (theoremLHS % AxiomRHS == 0)
@@ -988,30 +988,29 @@ namespace Euclid_Prover
 						Theorem_0001[last_UInt64] = Axiom[guid_UInt64];
 						Theorem_0001.emplace_back(0x01); // Push opcode 0x01 onto the proofstack because we performed a _lhs _expand operation) //
 						Theorem_0001.emplace_back(Axiom[guid_UInt64]); // Push the Axiom ID onto the proofstack //
-						__stdlog__ ({ "lhs_expand in Module_0001 via Axiom_", Axiom[guid_UInt64].str(), " {", Theorem_0001[LHS].str(), ", ", Theorem_0001[RHS].str(), "}" });
+						__stdlog__({ "lhs_expand in Module_0001 via Axiom_", Axiom[guid_UInt64].str(), " {", Theorem_0001[LHS].str(), ", ", Theorem_0001[RHS].str(), "}" });
 
-						// Commit for later fast-forward //
-						if (LHSRouteHistoryMap.find(Theorem_0001[LHS]) == LHSRouteHistoryMap.end())
-							LHSRouteHistoryMap.emplace(Theorem_0001[LHS], Theorem_0001);
+							// Commit for later fast-forward //
+							if (LHSRouteHistoryMap.find(Theorem_0001[LHS]) == LHSRouteHistoryMap.end())
+								LHSRouteHistoryMap.emplace(Theorem_0001[LHS], Theorem_0001);
 
-						// Attempt fast-forward //
-						if (RHSRouteHistoryMap.find(Theorem_0001[LHS]) != RHSRouteHistoryMap.end()) {
-							//std::cout << "Proof found in Module_0001 via Fast-Forward (FF)" << " {" << Theorem_0001[LHS].str() << ", " << Theorem_0001[LHS].str() << "}" << std::endl;
-							__stdlog__({ "Proof found in Module_0001 via Fast-Forward (FF)" });
-							auto opcode = RHSRouteHistoryMap[Theorem_0001[LHS]].begin() + ProofStackUInt64;
-							const auto OPCODE = RHSRouteHistoryMap[Theorem_0001[LHS]].end();
-							for (opcode; opcode != OPCODE; ++opcode)
-								Theorem_0001.emplace_back(*opcode);
-							Theorem_0001[RHS] = Theorem_0001[LHS];
+							// Attempt fast-forward //
+							if (RHSRouteHistoryMap.find(Theorem_0001[LHS]) != RHSRouteHistoryMap.end()) {
+								//std::cout << "Proof found in Module_0001 via Fast-Forward (FF)" << " {" << Theorem_0001[LHS].str() << ", " << Theorem_0001[LHS].str() << "}" << std::endl;
+								__stdlog__({ "Proof found in Module_0001 via Fast-Forward (FF)" });
+								auto opcode = RHSRouteHistoryMap[Theorem_0001[LHS]].begin() + ProofStackUInt64;
+								const auto OPCODE = RHSRouteHistoryMap[Theorem_0001[LHS]].end();
+								for (opcode; opcode != OPCODE; ++opcode)
+									Theorem_0001.emplace_back(*opcode);
+								Theorem_0001[RHS] = Theorem_0001[LHS];
 
-							// Is the FF queue still empty? //
-							if (FastForwardTask_Thread.empty()) {
-								bFastForwardFlag = true;
-								FastForwardTask_Thread.push(Theorem_0001);
+									// Is the FF queue still empty? //
+									if (FastForwardTask_Thread.empty()) {
+										bFastForwardFlag = true;
+										FastForwardTask_Thread.push(Theorem_0001);
+									}
 							}
-						}
-
-						Tasks_Thread.push(Theorem_0001);
+							Tasks_Thread.push(Theorem_0001);
 					}
 
 					if (theoremRHS % AxiomLHS == 0)
@@ -1021,30 +1020,29 @@ namespace Euclid_Prover
 						Theorem_0002[last_UInt64] = Axiom[guid_UInt64];
 						Theorem_0002.emplace_back(0x02); // Push opcode 0x02 onto the proofstack because we performed a _rhs _reduce operation) //
 						Theorem_0002.emplace_back(Axiom[guid_UInt64]); // Push the Axiom ID onto the proofstack //
-						__stdlog__ ({ "rhs_reduce in Module_0002 via Axiom_", Axiom[guid_UInt64].str(), " {" , Theorem_0002[LHS].str(), ", ", Theorem_0002[RHS].str(), "}" });
+						__stdlog__({ "rhs_reduce in Module_0002 via Axiom_", Axiom[guid_UInt64].str(), " {" , Theorem_0002[LHS].str(), ", ", Theorem_0002[RHS].str(), "}" });
 
-						// Commit for later fast-forward //
-						if (RHSRouteHistoryMap.find(Theorem_0002[RHS]) == RHSRouteHistoryMap.end())
-							RHSRouteHistoryMap.emplace(Theorem_0002[RHS], Theorem_0002);
+							// Commit for later fast-forward //
+							if (RHSRouteHistoryMap.find(Theorem_0002[RHS]) == RHSRouteHistoryMap.end())
+								RHSRouteHistoryMap.emplace(Theorem_0002[RHS], Theorem_0002);
 
-						// Attempt fast-forward //
-						if (LHSRouteHistoryMap.find(Theorem_0002[RHS]) != LHSRouteHistoryMap.end()) {
-							//std::cout << "Proof found in Module_0002 via Fast-Forward (FF)" << " {" << Theorem_0002[RHS].str() << ", " << Theorem_0002[RHS].str() << "}" << std::endl;
-							__stdlog__({ "Proof found in Module_0002 via Fast-Forward (FF)" });
-							auto opcode = LHSRouteHistoryMap[Theorem_0002[RHS]].begin() + ProofStackUInt64;
-							const auto OPCODE = LHSRouteHistoryMap[Theorem_0002[RHS]].end();
-							for (opcode; opcode != OPCODE; ++opcode)
-								Theorem_0002.emplace_back(*opcode);
-							Theorem_0002[LHS] = Theorem_0002[RHS];
+							// Attempt fast-forward //
+							if (LHSRouteHistoryMap.find(Theorem_0002[RHS]) != LHSRouteHistoryMap.end()) {
+								//std::cout << "Proof found in Module_0002 via Fast-Forward (FF)" << " {" << Theorem_0002[RHS].str() << ", " << Theorem_0002[RHS].str() << "}" << std::endl;
+								__stdlog__({ "Proof found in Module_0002 via Fast-Forward (FF)" });
+								auto opcode = LHSRouteHistoryMap[Theorem_0002[RHS]].begin() + ProofStackUInt64;
+								const auto OPCODE = LHSRouteHistoryMap[Theorem_0002[RHS]].end();
+								for (opcode; opcode != OPCODE; ++opcode)
+									Theorem_0002.emplace_back(*opcode);
+								Theorem_0002[LHS] = Theorem_0002[RHS];
 
-							// Is the FF queue still empty? //
-							if (FastForwardTask_Thread.empty()) {
-								bFastForwardFlag = true;
-								FastForwardTask_Thread.push(Theorem_0002);
+									// Is the FF queue still empty? //
+									if (FastForwardTask_Thread.empty()) {
+										bFastForwardFlag = true;
+										FastForwardTask_Thread.push(Theorem_0002);
+									}
 							}
-						}
-
-						Tasks_Thread.push(Theorem_0002);
+							Tasks_Thread.push(Theorem_0002);
 					}
 
 					if (theoremRHS % AxiomRHS == 0)
@@ -1054,30 +1052,29 @@ namespace Euclid_Prover
 						Theorem_0003[last_UInt64] = Axiom[guid_UInt64];
 						Theorem_0003.emplace_back(0x03); // Push opcode 0x03 onto the proofstack because we performed a _rhs _expand operation) //
 						Theorem_0003.emplace_back(Axiom[guid_UInt64]); // Push the Axiom ID onto the proofstack //
-						__stdlog__ ({ "rhs_expand in Module_0003 via Axiom_", Axiom[guid_UInt64].str(), " {", Theorem_0003[LHS].str(), ", ", Theorem_0003[RHS].str(), " }" });
+						__stdlog__({ "rhs_expand in Module_0003 via Axiom_", Axiom[guid_UInt64].str(), " {", Theorem_0003[LHS].str(), ", ", Theorem_0003[RHS].str(), " }" });
 
-						// Commit for later fast-forward //
-						if (RHSRouteHistoryMap.find(Theorem_0003[RHS]) == RHSRouteHistoryMap.end())
-							RHSRouteHistoryMap.emplace(Theorem_0003[RHS], Theorem_0003);
+							// Commit for later fast-forward //
+							if (RHSRouteHistoryMap.find(Theorem_0003[RHS]) == RHSRouteHistoryMap.end())
+								RHSRouteHistoryMap.emplace(Theorem_0003[RHS], Theorem_0003);
 
-						// Attempt fast-forward //
-						if (LHSRouteHistoryMap.find(Theorem_0003[RHS]) != LHSRouteHistoryMap.end()) {
-							//std::cout << "Proof found in Module_0003 via Fast-Forward (FF)" << " {" << Theorem_0003[RHS].str() << ", " << Theorem_0003[RHS].str() << "}" << std::endl;
-							__stdlog__({ "Proof found in Module_0003 via Fast-Forward (FF)", " {", Theorem_0003[RHS].str(), ", ", Theorem_0003[RHS].str(), "}"});
-							auto opcode = LHSRouteHistoryMap[Theorem_0003[RHS]].begin() + ProofStackUInt64;
-							const auto OPCODE = LHSRouteHistoryMap[Theorem_0003[RHS]].end();
-							for (opcode; opcode != OPCODE; ++opcode)
-								Theorem_0003.emplace_back(*opcode);
-							Theorem_0003[LHS] = Theorem_0003[RHS];
+							// Attempt fast-forward //
+							if (LHSRouteHistoryMap.find(Theorem_0003[RHS]) != LHSRouteHistoryMap.end()) {
+								//std::cout << "Proof found in Module_0003 via Fast-Forward (FF)" << " {" << Theorem_0003[RHS].str() << ", " << Theorem_0003[RHS].str() << "}" << std::endl;
+								__stdlog__({ "Proof found in Module_0003 via Fast-Forward (FF)", " {", Theorem_0003[RHS].str(), ", ", Theorem_0003[RHS].str(), "}" });
+								auto opcode = LHSRouteHistoryMap[Theorem_0003[RHS]].begin() + ProofStackUInt64;
+								const auto OPCODE = LHSRouteHistoryMap[Theorem_0003[RHS]].end();
+								for (opcode; opcode != OPCODE; ++opcode)
+									Theorem_0003.emplace_back(*opcode);
+								Theorem_0003[LHS] = Theorem_0003[RHS];
 
-							// Is the FF queue still empty? //
-							if (FastForwardTask_Thread.empty()) {
-								bFastForwardFlag = true;
-								FastForwardTask_Thread.push(Theorem_0003);
+									// Is the FF queue still empty? //
+									if (FastForwardTask_Thread.empty()) {
+										bFastForwardFlag = true;
+										FastForwardTask_Thread.push(Theorem_0003);
+									}
 							}
-						}
-
-						Tasks_Thread.push(Theorem_0003);
+							Tasks_Thread.push(Theorem_0003);
 					}
 
 					__stdlog__({ "" });
