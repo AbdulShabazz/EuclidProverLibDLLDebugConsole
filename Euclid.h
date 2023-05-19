@@ -975,6 +975,7 @@ namespace Euclid_Prover
 									if (FastForwardTask_Thread.empty()) {
 										bFastForwardFlag = true;
 										FastForwardTask_Thread.push(Theorem_0000);
+										break;
 									}
 							}
 							Tasks_Thread.push(Theorem_0000);
@@ -1007,6 +1008,7 @@ namespace Euclid_Prover
 									if (FastForwardTask_Thread.empty()) {
 										bFastForwardFlag = true;
 										FastForwardTask_Thread.push(Theorem_0001);
+										break;
 									}
 							}
 							Tasks_Thread.push(Theorem_0001);
@@ -1039,6 +1041,7 @@ namespace Euclid_Prover
 									if (FastForwardTask_Thread.empty()) {
 										bFastForwardFlag = true;
 										FastForwardTask_Thread.push(Theorem_0002);
+										break;
 									}
 							}
 							Tasks_Thread.push(Theorem_0002);
@@ -1071,6 +1074,7 @@ namespace Euclid_Prover
 									if (FastForwardTask_Thread.empty()) {
 										bFastForwardFlag = true;
 										FastForwardTask_Thread.push(Theorem_0003);
+										break;
 									}
 							}
 							Tasks_Thread.push(Theorem_0003);
