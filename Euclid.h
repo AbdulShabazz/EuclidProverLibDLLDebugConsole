@@ -645,9 +645,9 @@ namespace Euclid_Prover
 			//bTimeoutFlag = true;
 
 			const std::vector<BigInt128_t>
-			Theorem{ bFastForwardFlag ? FastForwardTask_Thread.top() : Tasks_Thread.top() };
+			Theorem{ !bFastForwardFlag ? Tasks_Thread.top() : FastForwardTask_Thread.top() };
 
-			bFastForwardFlag ? FastForwardTask_Thread.pop() : Tasks_Thread.pop() ;
+			!bFastForwardFlag ? Tasks_Thread.pop() : FastForwardTask_Thread.pop() ;
 
 			bFastForwardFlag = false;
 
@@ -701,7 +701,7 @@ namespace Euclid_Prover
 					{
 						__stdlog__({ "Next val: ", val });
 
-						if (/*!bSuccessFlag &&*/ val == from[i])
+						if (!bSuccessFlag && val == from[i])
 						{
 							++i;
 
