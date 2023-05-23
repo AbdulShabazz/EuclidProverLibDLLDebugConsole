@@ -10,25 +10,25 @@
 std::vector<std::string> TraceCallStackStdStrVec{ "EuclidProver" };
 #endif
 
-void __stdtracein__ (const std::string& msg)
+void __stdtracein__(const std::string& msg)
 {
 	// Check if the iostream library is included.
-	#ifdef IOSTREAM_INCLUDED
-	TraceCallStackStdStrVec.emplace_back (msg);
-	const std::size_t I = TraceCallStackStdStrVec.size ();
+#ifdef IOSTREAM_INCLUDED
+	TraceCallStackStdStrVec.emplace_back(msg);
+	const std::size_t I = TraceCallStackStdStrVec.size();
 	std::cout << TraceCallStackStdStrVec[0];
 	for (std::size_t i = 1; i < I; ++i)
 	{
 		std::cout << " >> " << TraceCallStackStdStrVec[i];
 	}
 	std::cout << std::endl;
-	#endif
+#endif
 };
 
-void __stdtraceout__ (const std::string& msg)
+void __stdtraceout__(const std::string& msg)
 {
 	// Check if the iostream library is included.
-	#ifdef IOSTREAM_INCLUDED
+#ifdef IOSTREAM_INCLUDED
 	TraceCallStackStdStrVec.pop_back();
 	const std::size_t I = TraceCallStackStdStrVec.size();
 	std::string buff{ TraceCallStackStdStrVec[0] };
@@ -38,13 +38,13 @@ void __stdtraceout__ (const std::string& msg)
 	}
 	std::cout << buff << " << " << msg << std::endl;
 	std::cout << buff << std::endl;
-	#endif
+#endif
 };
 
 void __stdlog__(const std::initializer_list<std::string>& msg, const bool AddNewlineFlag = true)
 {
 	// Check if the iostream library is included.
-	#ifdef IOSTREAM_INCLUDED
+#ifdef IOSTREAM_INCLUDED
 	auto it = msg.begin();
 	auto IT = msg.end();
 	std::cout << *it;
@@ -55,7 +55,30 @@ void __stdlog__(const std::initializer_list<std::string>& msg, const bool AddNew
 	}
 	if (AddNewlineFlag)
 		std::cout << std::endl;
-	#endif
+#endif
+};
+
+std::size_t _depth {};
+
+// Handle case when T is not a vector
+template <typename T>
+typename std::enable_if<!std::is_same<T, std::vector<typename T::value_type>>::value, void>::type
+print_path(const T& element) noexcept {
+	std::cout << " " << element << " ";
+};
+
+// Handle case when T is a vector
+template <typename T>
+typename std::enable_if<std::is_same<T, std::vector<typename T::value_type>>::value, void>::type
+print_path(const T& vector) noexcept {
+	// Add a newline and indent each level of depth
+	std::cout << std::string(_depth % 2, '\n') << "{ ";
+	_depth++;
+	for (const auto& element : vector) {
+		print_path(element);
+	}
+	_depth--;
+	std::cout << " }";
 };
 
 /*
@@ -169,18 +192,24 @@ void __stdlog__(const std::initializer_list<std::string>& msg, const bool AddNew
 			std::vector<
 			std::string>>>>
 
-			// Instantiate ProofStep_4DStdStrVec[proof][step][lhs/rhs][token]
-			ProofStep_4DStdStrVec;
+			// Instantiate ProofStep4DStdStrVec[proof][step][lhs/rhs][token]
+			ProofStep4DStdStrVec;
 
 		std::vector<
 			std::vector<
 			std::string>>
 
-			// Instantiate AxiomCommitLog_StdStrVec[proof][step]
-			AxiomCommitLog_StdStrVec;
+			// Instantiate AxiomCommitLogStdStrVec[proof][step]
+			AxiomCommitLogStdStrVec;
 
 		// Instantiate Prover (module)
-		EuclidProver<BracketType::CurlyBraces> Euclid;
+
+		using EuclidProverClass =
+
+			Euclid_Prover::EuclidProver<
+			Euclid_Prover::BracketType::CurlyBraces>;
+
+		EuclidProverClass Euclid;
 
 		Euclid.Axioms
 		(
@@ -193,7 +222,7 @@ void __stdlog__(const std::initializer_list<std::string>& msg, const bool AddNew
 
 				 // Axiom_01
 				{
-					{ "{", "PlayerCharacterSideKick", "}", "IsIn", "{", "Vehicle", "{", "QuadUtilityVehicle", "}", "}"}, // lhs
+					{ "{", "PlayerCharacterSideKick", "}", "IsIn", "{", "Vehicle", "{", "QuadUtilityVehicle", "}", "}" }, // lhs
 					{ "{", "Vehicle", "{", "QuadUtilityVehicle", "}", "}", "IsIn", "{", "EuropaLand", "}", "and", "{", "Vehicle", "{", "QuadUtilityVehicle", "{", "VehicleDriveDisabled", "}", "}", "}" } // rhs
 				},
 
@@ -235,12 +264,12 @@ void __stdlog__(const std::initializer_list<std::string>& msg, const bool AddNew
 		Euclid.Prove
 		(
 			{
-				{ "{", "PlayerCharacterSideKick", "}", "IsIn", "{", "QuadUtilityVehicle", "}", }, // lhs
+				{ "{", "PlayerCharacterSideKick", "}", "IsIn", "{", "QuadUtilityVehicle", "}" }, // lhs
 				{ "{", "QuadUtilityVehicle", "}", "and", "{", "VehicleDriveDisabled", "}" } // rhs
 			},
 
-			ProofStep_4DStdStrVec,
-			AxiomCommitLog_StdStrVec
+			ProofStep4DStdStrVec,
+			AxiomCommitLogStdStrVec
 		);
 
 		/ *
@@ -271,11 +300,11 @@ void __stdlog__(const std::initializer_list<std::string>& msg, const bool AddNew
 		if (Euclid.ProofFoundFlag)
 		{
 			std::cout << "Proof Found. (QED)" << std::endl;
-			ProofStep4DStdStrVec;
+			Euclid.PrintPath(ProofStep4DStdStrVec);
 			Euclid.PrintPath(AxiomCommitLogStdStrVec);
 		} else if (ProofStep4DStdStrVec.size()) {
 			std::cout << "Partial Proof Found." << std::endl;
-			ProofStep4DStdStrVec;
+			Euclid.PrintPath(ProofStep4DStdStrVec);
 			Euclid.PrintPath(AxiomCommitLogStdStrVec);
 		} else {
 			std::cout << "No Proof Found." << std::endl;
@@ -293,7 +322,7 @@ void __stdlog__(const std::initializer_list<std::string>& msg, const bool AddNew
 
 	```
 
-  TEST CASE 246: nanoseconds elapsed: 133717800
+  TEST CASE 246: nanoseconds elapsed: 134036600
 
   REFERENCES
 	  OpenAI GPT-4-32k-0314 ( { max_tokens:32000, temperature:1.0, top_p:1.0, N:1,
@@ -312,6 +341,7 @@ void __stdlog__(const std::initializer_list<std::string>& msg, const bool AddNew
 #define API_EXPORT __declspec(dllimport)
 #endif
 */
+
 #include <thread>
 #include <initializer_list>
 #include <queue>
@@ -319,6 +349,7 @@ void __stdlog__(const std::initializer_list<std::string>& msg, const bool AddNew
 #include <future>
 #include <algorithm>
 #include <iterator>
+#include <type_traits>
 #include <boost/multiprecision/cpp_int.hpp> 
 
 namespace Euclid_Prover
@@ -326,8 +357,8 @@ namespace Euclid_Prover
 	using BigInt128_t = boost::multiprecision::cpp_int;
 
 	std::unordered_multimap<
-	std::string, BigInt128_t>
-	SymbolToPrime_UInt64MultiMap =
+		std::string, BigInt128_t>
+		SymbolToPrime_UInt64MultiMap =
 	{
 		{"=", 2},
 		{"{", 3},
@@ -343,9 +374,9 @@ namespace Euclid_Prover
 	std::vector<BigInt128_t> PrimeComposite_UInt64Vec{ 2, 3, 5, 7, 11, 13, 17 };
 
 	std::vector<
-	std::vector<
-	std::vector<
-	std::string>>> TempProofSteps{};
+		std::vector<
+		std::vector<
+		std::string>>> TempProofSteps{};
 
 	/**
 	 * Prime() : Return the next prime in the series...
@@ -366,7 +397,7 @@ namespace Euclid_Prover
 			for (const BigInt128_t& val : PrimeComposite_UInt64Vec)
 			{
 
-				if (/*(i % 2) == 0 ||*/ (i % val) == 0)
+				if (/*(i % 2) == 0 ||*/ ( i % val ) == 0)
 				{
 					Add_Flag = false;
 					break;
@@ -383,7 +414,7 @@ namespace Euclid_Prover
 				PrimeComposite_UInt64Vec.emplace_back(i);
 			}
 		}
-		__stdtraceout__ ("Euclid_Prover::Prime");
+		__stdtraceout__("Euclid_Prover::Prime");
 		return PrimeComposite_UInt64Vec[Index_UInt64];
 	}
 
@@ -406,14 +437,13 @@ namespace Euclid_Prover
 		bool&
 		OutProofFound_FlagRef,
 
-		bool& 
+		bool&
 		OutStatusReadyFlag,
 
 		std::vector<
 		std::vector<
 		std::vector<
-		std::vector<
-		std::string>>>>&
+		std::string>>>&
 		OutProofStepStdStrVecRef,
 
 		std::vector<
@@ -426,7 +456,7 @@ namespace Euclid_Prover
 
 		TempProofSteps = {};
 
-		bool QED {};
+		bool QED{};
 
 		BigInt128_t GUID_UInt64{};
 
@@ -436,7 +466,7 @@ namespace Euclid_Prover
 			[
 				&
 			]
-		() -> void
+		( ) -> void
 		{
 			__stdtracein__("PopulateTheoremVec");
 			for (const std::vector<std::string>& Subnet_StdStrVec : InTheoremStdStrVec)
@@ -450,8 +480,7 @@ namespace Euclid_Prover
 					{
 						PrimeProduct_UInt64Vec *= it->second;
 						__stdlog__({ "Prime: ", Symbol_StdStr ," <- ",it->second.str(),", PrimeProduct: ", PrimeProduct_UInt64Vec.str() });
-					}
-					else {
+					} else {
 						// This key/value pair is not in the prime number multimap...
 						const BigInt128_t p = Prime();
 						SymbolToPrime_UInt64MultiMap.emplace(Symbol_StdStr, p);
@@ -468,14 +497,14 @@ namespace Euclid_Prover
 		};
 
 		std::vector<
-		std::vector<
-		BigInt128_t>> Axioms_UInt64Vec;
+			std::vector<
+			BigInt128_t>> Axioms_UInt64Vec;
 
 		auto PopulateAxiomVec =
 			[
 				&
 			]
-		() -> void
+		( ) -> void
 		{
 			__stdtracein__("PopulateAxiomVec");
 			for
@@ -505,8 +534,7 @@ namespace Euclid_Prover
 						{
 							PrimeProduct_UInt64Vec *= it->second;
 							__stdlog__({ "Prime: ", Symbol_StdStr ," <- ",it->second.str(),", PrimeProduct: ", PrimeProduct_UInt64Vec.str() });
-						}
-						else {
+						} else {
 							// This key/value pair is not in the prime number multimap...
 							const BigInt128_t p = Prime();
 							SymbolToPrime_UInt64MultiMap.emplace(Symbol_StdStr, p);
@@ -522,6 +550,8 @@ namespace Euclid_Prover
 			}
 			__stdtraceout__("PopulateAxiomVec");
 		};
+
+		std::unordered_map<BigInt128_t, std::unordered_map<BigInt128_t, bool>> CallGraphUInt64Map{};
 
 		/*
 		Theorem
@@ -547,7 +577,7 @@ namespace Euclid_Prover
 			[
 				&
 			]
-		() -> void
+		( ) -> void
 		{
 			__stdtracein__("RebalanceTheoremVec");
 			BigInt128_t& lhs = Theorem_UInt64Vec[LHS];
@@ -564,7 +594,7 @@ namespace Euclid_Prover
 			[
 				&
 			]
-		() -> void
+		( ) -> void
 		{
 			__stdtracein__("RebalanceAxiomVec");
 			for (std::vector<BigInt128_t>& Axiom_i : Axioms_UInt64Vec)
@@ -623,8 +653,8 @@ namespace Euclid_Prover
 		bool bTimeoutFlag{};
 
 		std::priority_queue<
-		std::vector<
-		BigInt128_t>> Tasks_Thread, FastForwardTask_Thread;
+			std::vector<
+			BigInt128_t>> Tasks_Thread, FastForwardTask_Thread;
 
 		Tasks_Thread.push(Theorem_UInt64Vec);
 
@@ -635,7 +665,7 @@ namespace Euclid_Prover
 		// Todo: Add Resume, Suspend support for Proofs
 		// Todo: Create a proof-statement hash which can be used as a file handle to a proofstep solution when it posts to a file (stateless)
 		// Todo: Prevent Tasks_Thread (stack) overflows by including a timeout or deferring unprocessed axiom rewrites to a standby thread
-		
+
 		// *** Core Proof Engine (Loop) *** //
 
 		bool bFastForwardFlag{};
@@ -645,22 +675,22 @@ namespace Euclid_Prover
 			//bTimeoutFlag = true;
 
 			const std::vector<BigInt128_t>
-			Theorem{ !bFastForwardFlag ? Tasks_Thread.top() : FastForwardTask_Thread.top() };
+				Theorem{ !bFastForwardFlag ? Tasks_Thread.top() : FastForwardTask_Thread.top() };
 
-			!bFastForwardFlag ? Tasks_Thread.pop() : FastForwardTask_Thread.pop() ;
+			!bFastForwardFlag ? Tasks_Thread.pop() : FastForwardTask_Thread.pop();
 
 			bFastForwardFlag = false;
 
 			// Check rewrite proofs in the task queue //
-			const bool TentativeProofFound_Flag = (Theorem[LHS] == Theorem[RHS]);
+			const bool TentativeProofFound_Flag = ( Theorem[LHS] == Theorem[RHS] );
 
 			if (TentativeProofFound_Flag)
 			{
-				/** 
+				/**
 				Alright, we have successfully employed prime number fields
-				to effectively and swiftly reduce the size of our potential solution set. 
-				
-				Now, our next step is to confirm that this narrowed down solution space 
+				to effectively and swiftly reduce the size of our potential solution set.
+
+				Now, our next step is to confirm that this narrowed down solution space
 				indeed leads us to a valid routing map...
 				*/
 
@@ -672,30 +702,27 @@ namespace Euclid_Prover
 				TempProofSteps.emplace_back(InTheoremStdStrVec);
 
 				auto Rewrite = [&]
-				(
-					auto& th,
-
-					const auto& from,
-
-					const auto& to
-				) -> bool
+					(
+						auto& th,
+						const auto& from,
+						const auto& to
+					) -> bool
 				{
 					__stdtracein__("Rewrite");
 					bool bSuccessFlag{};
 
-					if (th.size () < from.size ())
+					if (th.size() < from.size())
 						return false;
 
 					std::unordered_map<std::string, std::string>
 
-						endscope{ {"(", ")"}, {"{", "}"}, {"[", "]"} };
+						endscope{ {"(", ")"}, { "{", "}" }, { "[", "]" } };
 
-					std::vector<
-						std::string> result{};
+					std::vector<std::string> result{};
 
 					std::size_t i{};
 
-					const std::size_t I{ from.size () };
+					const std::size_t I{ from.size() };
 
 					for (const auto& val : th)
 					{
@@ -707,14 +734,14 @@ namespace Euclid_Prover
 
 							__stdlog__({ "Match found: ", val, " >> " }, false);
 
-							const bool bLocalSubnetFoundFlag = (i == I);
+							const bool bLocalSubnetFoundFlag = ( i == I );
 
 							if (bLocalSubnetFoundFlag)
 							{
 								for (const auto& u2 : to)
 								{
 									__stdlog__({ u2, " " }, false);
-									result.emplace_back (u2);
+									result.emplace_back(u2);
 								}
 
 								bSuccessFlag = true;
@@ -730,7 +757,7 @@ namespace Euclid_Prover
 
 							__stdlog__({ "No Match found: ", val });
 
-							result.emplace_back (val);
+							result.emplace_back(val);
 						}
 						__stdlog__({ "" });
 					}
@@ -777,108 +804,92 @@ namespace Euclid_Prover
 				If ProofVerified is unable to complete the loop, the algorithm returns false.
 				*/
 				auto ProofVerified = [&]
-				(
-					const
-					std::vector<
-					BigInt128_t>&
-					InTheoremUInt64,
+					(
+						const
+						std::vector<
+						BigInt128_t>&
+						InTheoremUInt64,
 
-					const
-					std::vector<
-					std::vector<
-					std::string>>&
-					InTheoremStdStrVec,
+						const
+						std::vector<
+						std::vector<
+						std::string>>&
+						InTheoremStdStrVec,
 
-					const
-					std::vector<
-					std::vector<
-					std::vector<
-					std::string>>>&
-					InAxiomsStdStrVec,
-
-					std::vector<
-					std::vector<
-					std::string>>&
-					OutAxiomCommitLogStdStrVecRef,
-
-					std::vector<
-					std::vector<
-					std::vector<
-					std::string>>>&
-					OutTheoremStdStrVec
-				) -> bool
+						const
+						std::vector<
+						std::vector<
+						std::vector<
+						std::string>>>&
+						InAxiomsStdStrVec
+					) -> bool
 				{
 					__stdtracein__("ProofVerified");
-					bool ReturnStatusFlag{ true };
 
-					OutTheoremStdStrVec.emplace_back (InTheoremStdStrVec);
-
-					std::vector<
-					std::vector<
-					std::string>>
-					TempTheoremStdStrVec{ InTheoremStdStrVec };
+					bool ReturnStatusFlag{true};
 
 					std::vector<
-					std::string>
-					TempAxiomCommitLogStdStrVecRef;
+						std::vector<
+						std::string>>
+						TempTheoremStdStrVec{ InTheoremStdStrVec };
+
+					//print_path(InTheoremStdStrVec);
+
+					std::vector<
+						std::string>
+						TempAxiomCommitLogStdStrVecRef;
 
 					/**
-					Loop through Theorem, starting at Theorem[ProofStackUInt64],
-					and read a pair of values from the vector:
+					Loop through the Theorem's proofstack, which starts at Theorem[ProofStackUInt64],
+					and read off a pair of values from the vector:
 
-					The first value, is an opcode whose hexadecimal value
+					1. An opcode whose hexadecimal value
 					ranges from 0x00 to 0x03 (See above for further explanation)
 
-					The second value, is an index into InAxiomsStdStrVec,					 
-					where guid is Axiom_[guid].
+					2. An index into InAxiomsStdStrVec, where guid is Axiom_[guid].
 					*/
 
 					std::size_t i { ProofStackUInt64 };
 
-					while (i < InTheoremUInt64.size ())
-					{
-						if (!ReturnStatusFlag) {
-							OutAxiomCommitLogStdStrVecRef.emplace_back (TempAxiomCommitLogStdStrVecRef);
-							return ReturnStatusFlag;
-						}
+					OutProofStepStdStrVecRef.push_back(TempTheoremStdStrVec);
 
+					while (i < InTheoremUInt64.size())
+					{
 						const std::size_t& opcode = std::size_t{ InTheoremUInt64[i++] };
 						const std::size_t& guid = std::size_t{ InTheoremUInt64[i++] - 1 };
-
-						//TempTheoremStdStrVec = OutTheoremStdStrVec.back();
 
 						switch (opcode)
 						{
 							case 0x00:
 							{ // "lhsreduce" operation //
 								__stdlog__({ "lhs_reduce via Axiom_", std::to_string(guid) });
-								//ReturnStatusFlag =
-									//Rewrite (TempTheoremStdStrVec[LHS], InAxiomsStdStrVec[guid][LHS], InAxiomsStdStrVec[guid][RHS]);
-								TempAxiomCommitLogStdStrVecRef.emplace_back ("lhs_reduce via Axiom_" + std::to_string (guid));
+								ReturnStatusFlag =
+									Rewrite (TempTheoremStdStrVec[LHS], InAxiomsStdStrVec[guid][LHS], InAxiomsStdStrVec[guid][RHS]);
+								TempAxiomCommitLogStdStrVecRef.emplace_back("lhs_reduce via Axiom_" + std::to_string(guid));
 								break;
 							}
 							case 0x01:
 							{ // "lhsexpand" operation //
 								__stdlog__({ "lhs_expand via Axiom_", std::to_string(guid) });
-								//ReturnStatusFlag =
-									//Rewrite (TempTheoremStdStrVec[LHS], InAxiomsStdStrVec[guid][RHS], InAxiomsStdStrVec[guid][LHS]);
-								TempAxiomCommitLogStdStrVecRef.emplace_back ("lhs_expand via Axiom_" + std::to_string (guid));
+								ReturnStatusFlag =
+									Rewrite (TempTheoremStdStrVec[LHS], InAxiomsStdStrVec[guid][RHS], InAxiomsStdStrVec[guid][LHS]);
+								TempAxiomCommitLogStdStrVecRef.emplace_back("lhs_expand via Axiom_" + std::to_string(guid));
 								break;
 							}
 							case 0x02:
 							{ // "rhsreduce" operation //
 								__stdlog__({ "rhs_reduce via Axiom_", std::to_string(guid) });
-								//ReturnStatusFlag =
-									//Rewrite (TempTheoremStdStrVec[RHS], InAxiomsStdStrVec[guid][LHS], InAxiomsStdStrVec[guid][RHS]);
-								TempAxiomCommitLogStdStrVecRef.emplace_back ("rhs_reduce via Axiom_" + std::to_string (guid));
+								ReturnStatusFlag =
+									Rewrite (TempTheoremStdStrVec[RHS], InAxiomsStdStrVec[guid][LHS], InAxiomsStdStrVec[guid][RHS]);
+								TempAxiomCommitLogStdStrVecRef.emplace_back("rhs_reduce via Axiom_" + std::to_string(guid));
 								break;
 							}
 							case 0x03:
 							{ // "rhsexpand" operation //
 								__stdlog__({ "rhs_expand via Axiom_", std::to_string(guid) });
-								//ReturnStatusFlag =
-									//Rewrite (TempTheoremStdStrVec[RHS], InAxiomsStdStrVec[guid][RHS], InAxiomsStdStrVec[guid][LHS]);
-								TempAxiomCommitLogStdStrVecRef.emplace_back ("rhs_expand via Axiom_" + std::to_string (guid));
+								ReturnStatusFlag =
+									Rewrite (TempTheoremStdStrVec[RHS], InAxiomsStdStrVec[guid][RHS], InAxiomsStdStrVec[guid][LHS]);
+								TempAxiomCommitLogStdStrVecRef.emplace_back("rhs_expand via Axiom_" + std::to_string(guid));
 								break;
 							}
 							default:
@@ -888,34 +899,32 @@ namespace Euclid_Prover
 								break;
 							}
 						} // end switch(opcode)
-						OutTheoremStdStrVec.emplace_back (TempTheoremStdStrVec);
+						OutProofStepStdStrVecRef.push_back(TempTheoremStdStrVec);
+
+						//print_path(TempTheoremStdStrVec);
+
+						if (!ReturnStatusFlag) 
+							break;
 					}
-					OutAxiomCommitLogStdStrVecRef.emplace_back (TempAxiomCommitLogStdStrVecRef);
+					OutAxiomCommitLogStdStrVecRef.push_back(TempAxiomCommitLogStdStrVecRef);
 
-					// If TentativeProofVerified is unable to complete the loop, the algorithm returns false.
-					__stdtraceout__ ("ProofVerified");
-					return true;
+					//print_path(OutProofStepStdStrVecRef);
+
+					// If TentativeProofVerified is unable to finish the loop, return false.
+					__stdtraceout__("ProofVerified");
+					return ReturnStatusFlag;
 				};
-
-				std::vector<std::string> TempAxiomCommitLog_StdStrVec {};
 
 				//QED = true;
 				//break;
-				
-				std::vector<
-				std::vector<
-				std::vector<
-				std::string>>>
-				OutTheoremStdStrVec;
 
-				if (
+				if 
+					(
 						ProofVerified
 						(
 							Theorem,
 							InTheoremStdStrVec,
-							InAxiomsStdStrVec,
-							OutAxiomCommitLogStdStrVecRef,
-							OutTheoremStdStrVec
+							InAxiomsStdStrVec
 						)
 					)
 				{
@@ -947,7 +956,10 @@ namespace Euclid_Prover
 					const auto& AxiomLHS = Axiom[LHS];
 					const auto& AxiomRHS = Axiom[RHS];
 
-					if (theoremLHS % AxiomLHS == 0)
+					//const bool SubnetFound = CallGraphUInt64Map[Theorem[last_UInt64]][Axiom[guid_UInt64]];
+					//std::cout << SubnetFound << std::endl;
+
+					if (theoremLHS % AxiomLHS == 0 )
 					{
 						std::vector<BigInt128_t> Theorem_0000{ Theorem };
 						Theorem_0000[LHS] = Theorem_0000[LHS] / AxiomLHS * AxiomRHS;
@@ -957,28 +969,28 @@ namespace Euclid_Prover
 						Theorem_0000.emplace_back(Axiom[guid_UInt64]); // Push the Axiom ID onto the proofstack //
 						__stdlog__({ "lhs_reduce in Module_0000 via Axiom_", Axiom[guid_UInt64].str(), " {", Theorem_0000[LHS].str(), ", ", Theorem_0000[RHS].str(), "}" });
 
-							// Commit for later fast-forward //
-							if (LHSRouteHistoryMap.find(Theorem_0000[LHS]) == LHSRouteHistoryMap.end())
-								LHSRouteHistoryMap.emplace(Theorem_0000[LHS], Theorem_0000);
+						// Commit for later fast-forward //
+						if (LHSRouteHistoryMap.find(Theorem_0000[LHS]) == LHSRouteHistoryMap.end())
+							LHSRouteHistoryMap.emplace(Theorem_0000[LHS], Theorem_0000);
 
-							// Attempt fast-forward //
-							if (RHSRouteHistoryMap.find(Theorem_0000[LHS]) != RHSRouteHistoryMap.end()) {
-								//std::cout << "Proof found in Module_0000 via Fast-Forward (FF)" << " {" << Theorem_0000[LHS].str() << ", " << Theorem_0000[LHS].str() << "}" << std::endl;
-								__stdlog__({ "Proof found in Module_0000 via Fast-Forward (FF)" });
-								auto opcode = RHSRouteHistoryMap[Theorem_0000[LHS]].begin() + ProofStackUInt64;
-								const auto OPCODE = RHSRouteHistoryMap[Theorem_0000[LHS]].end();
-								for (opcode; opcode != OPCODE; ++opcode)
-									Theorem_0000.emplace_back(*opcode);
-								Theorem_0000[RHS] = Theorem_0000[LHS];
+						// Attempt fast-forward //
+						if (RHSRouteHistoryMap.find(Theorem_0000[LHS]) != RHSRouteHistoryMap.end()) {
+							//std::cout << "Proof found in Module_0000 via Fast-Forward (FF)" << " {" << Theorem_0000[LHS].str() << ", " << Theorem_0000[LHS].str() << "}" << std::endl;
+							__stdlog__({ "Proof found in Module_0000 via Fast-Forward (FF)" });
+							auto opcode = RHSRouteHistoryMap[Theorem_0000[LHS]].begin() + ProofStackUInt64;
+							const auto OPCODE = RHSRouteHistoryMap[Theorem_0000[LHS]].end();
+							for (; opcode != OPCODE; ++opcode)
+								Theorem_0000.emplace_back(*opcode);
+							Theorem_0000[RHS] = Theorem_0000[LHS];
 
-									// Is the FF queue still empty? //
-									if (FastForwardTask_Thread.empty()) {
-										bFastForwardFlag = true;
-										FastForwardTask_Thread.push(Theorem_0000);
-										break;
-									}
+							// Is the FF queue still empty? //
+							if (FastForwardTask_Thread.empty()) {
+								bFastForwardFlag = true;
+								FastForwardTask_Thread.push(Theorem_0000);
+								break;
 							}
-							Tasks_Thread.push(Theorem_0000);
+						}
+						Tasks_Thread.push(Theorem_0000);
 					}
 
 					if (theoremLHS % AxiomRHS == 0)
@@ -990,28 +1002,28 @@ namespace Euclid_Prover
 						Theorem_0001.emplace_back(Axiom[guid_UInt64]); // Push the Axiom ID onto the proofstack //
 						__stdlog__({ "lhs_expand in Module_0001 via Axiom_", Axiom[guid_UInt64].str(), " {", Theorem_0001[LHS].str(), ", ", Theorem_0001[RHS].str(), "}" });
 
-							// Commit for later fast-forward //
-							if (LHSRouteHistoryMap.find(Theorem_0001[LHS]) == LHSRouteHistoryMap.end())
-								LHSRouteHistoryMap.emplace(Theorem_0001[LHS], Theorem_0001);
+						// Commit for later fast-forward //
+						if (LHSRouteHistoryMap.find(Theorem_0001[LHS]) == LHSRouteHistoryMap.end())
+							LHSRouteHistoryMap.emplace(Theorem_0001[LHS], Theorem_0001);
 
-							// Attempt fast-forward //
-							if (RHSRouteHistoryMap.find(Theorem_0001[LHS]) != RHSRouteHistoryMap.end()) {
-								//std::cout << "Proof found in Module_0001 via Fast-Forward (FF)" << " {" << Theorem_0001[LHS].str() << ", " << Theorem_0001[LHS].str() << "}" << std::endl;
-								__stdlog__({ "Proof found in Module_0001 via Fast-Forward (FF)" });
-								auto opcode = RHSRouteHistoryMap[Theorem_0001[LHS]].begin() + ProofStackUInt64;
-								const auto OPCODE = RHSRouteHistoryMap[Theorem_0001[LHS]].end();
-								for (opcode; opcode != OPCODE; ++opcode)
-									Theorem_0001.emplace_back(*opcode);
-								Theorem_0001[RHS] = Theorem_0001[LHS];
+						// Attempt fast-forward //
+						if (RHSRouteHistoryMap.find(Theorem_0001[LHS]) != RHSRouteHistoryMap.end()) {
+							//std::cout << "Proof found in Module_0001 via Fast-Forward (FF)" << " {" << Theorem_0001[LHS].str() << ", " << Theorem_0001[LHS].str() << "}" << std::endl;
+							__stdlog__({ "Proof found in Module_0001 via Fast-Forward (FF)" });
+							auto opcode = RHSRouteHistoryMap[Theorem_0001[LHS]].begin() + ProofStackUInt64;
+							const auto OPCODE = RHSRouteHistoryMap[Theorem_0001[LHS]].end();
+							for (; opcode != OPCODE; ++opcode)
+								Theorem_0001.emplace_back(*opcode);
+							Theorem_0001[RHS] = Theorem_0001[LHS];
 
-									// Is the FF queue still empty? //
-									if (FastForwardTask_Thread.empty()) {
-										bFastForwardFlag = true;
-										FastForwardTask_Thread.push(Theorem_0001);
-										break;
-									}
+							// Is the FF queue still empty? //
+							if (FastForwardTask_Thread.empty()) {
+								bFastForwardFlag = true;
+								FastForwardTask_Thread.push(Theorem_0001);
+								break;
 							}
-							Tasks_Thread.push(Theorem_0001);
+						}
+						Tasks_Thread.push(Theorem_0001);
 					}
 
 					if (theoremRHS % AxiomLHS == 0)
@@ -1023,28 +1035,28 @@ namespace Euclid_Prover
 						Theorem_0002.emplace_back(Axiom[guid_UInt64]); // Push the Axiom ID onto the proofstack //
 						__stdlog__({ "rhs_reduce in Module_0002 via Axiom_", Axiom[guid_UInt64].str(), " {" , Theorem_0002[LHS].str(), ", ", Theorem_0002[RHS].str(), "}" });
 
-							// Commit for later fast-forward //
-							if (RHSRouteHistoryMap.find(Theorem_0002[RHS]) == RHSRouteHistoryMap.end())
-								RHSRouteHistoryMap.emplace(Theorem_0002[RHS], Theorem_0002);
+						// Commit for later fast-forward //
+						if (RHSRouteHistoryMap.find(Theorem_0002[RHS]) == RHSRouteHistoryMap.end())
+							RHSRouteHistoryMap.emplace(Theorem_0002[RHS], Theorem_0002);
 
-							// Attempt fast-forward //
-							if (LHSRouteHistoryMap.find(Theorem_0002[RHS]) != LHSRouteHistoryMap.end()) {
-								//std::cout << "Proof found in Module_0002 via Fast-Forward (FF)" << " {" << Theorem_0002[RHS].str() << ", " << Theorem_0002[RHS].str() << "}" << std::endl;
-								__stdlog__({ "Proof found in Module_0002 via Fast-Forward (FF)" });
-								auto opcode = LHSRouteHistoryMap[Theorem_0002[RHS]].begin() + ProofStackUInt64;
-								const auto OPCODE = LHSRouteHistoryMap[Theorem_0002[RHS]].end();
-								for (opcode; opcode != OPCODE; ++opcode)
-									Theorem_0002.emplace_back(*opcode);
-								Theorem_0002[LHS] = Theorem_0002[RHS];
+						// Attempt fast-forward //
+						if (LHSRouteHistoryMap.find(Theorem_0002[RHS]) != LHSRouteHistoryMap.end()) {
+							//std::cout << "Proof found in Module_0002 via Fast-Forward (FF)" << " {" << Theorem_0002[RHS].str() << ", " << Theorem_0002[RHS].str() << "}" << std::endl;
+							__stdlog__({ "Proof found in Module_0002 via Fast-Forward (FF)" });
+							auto opcode = LHSRouteHistoryMap[Theorem_0002[RHS]].begin() + ProofStackUInt64;
+							const auto OPCODE = LHSRouteHistoryMap[Theorem_0002[RHS]].end();
+							for (; opcode != OPCODE; ++opcode)
+								Theorem_0002.emplace_back(*opcode);
+							Theorem_0002[LHS] = Theorem_0002[RHS];
 
-									// Is the FF queue still empty? //
-									if (FastForwardTask_Thread.empty()) {
-										bFastForwardFlag = true;
-										FastForwardTask_Thread.push(Theorem_0002);
-										break;
-									}
+							// Is the FF queue still empty? //
+							if (FastForwardTask_Thread.empty()) {
+								bFastForwardFlag = true;
+								FastForwardTask_Thread.push(Theorem_0002);
+								break;
 							}
-							Tasks_Thread.push(Theorem_0002);
+						}
+						Tasks_Thread.push(Theorem_0002);
 					}
 
 					if (theoremRHS % AxiomRHS == 0)
@@ -1056,28 +1068,28 @@ namespace Euclid_Prover
 						Theorem_0003.emplace_back(Axiom[guid_UInt64]); // Push the Axiom ID onto the proofstack //
 						__stdlog__({ "rhs_expand in Module_0003 via Axiom_", Axiom[guid_UInt64].str(), " {", Theorem_0003[LHS].str(), ", ", Theorem_0003[RHS].str(), " }" });
 
-							// Commit for later fast-forward //
-							if (RHSRouteHistoryMap.find(Theorem_0003[RHS]) == RHSRouteHistoryMap.end())
-								RHSRouteHistoryMap.emplace(Theorem_0003[RHS], Theorem_0003);
+						// Commit for later fast-forward //
+						if (RHSRouteHistoryMap.find(Theorem_0003[RHS]) == RHSRouteHistoryMap.end())
+							RHSRouteHistoryMap.emplace(Theorem_0003[RHS], Theorem_0003);
 
-							// Attempt fast-forward //
-							if (LHSRouteHistoryMap.find(Theorem_0003[RHS]) != LHSRouteHistoryMap.end()) {
-								//std::cout << "Proof found in Module_0003 via Fast-Forward (FF)" << " {" << Theorem_0003[RHS].str() << ", " << Theorem_0003[RHS].str() << "}" << std::endl;
-								__stdlog__({ "Proof found in Module_0003 via Fast-Forward (FF)", " {", Theorem_0003[RHS].str(), ", ", Theorem_0003[RHS].str(), "}" });
-								auto opcode = LHSRouteHistoryMap[Theorem_0003[RHS]].begin() + ProofStackUInt64;
-								const auto OPCODE = LHSRouteHistoryMap[Theorem_0003[RHS]].end();
-								for (opcode; opcode != OPCODE; ++opcode)
-									Theorem_0003.emplace_back(*opcode);
-								Theorem_0003[LHS] = Theorem_0003[RHS];
+						// Attempt fast-forward //
+						if (LHSRouteHistoryMap.find(Theorem_0003[RHS]) != LHSRouteHistoryMap.end()) {
+							//std::cout << "Proof found in Module_0003 via Fast-Forward (FF)" << " {" << Theorem_0003[RHS].str() << ", " << Theorem_0003[RHS].str() << "}" << std::endl;
+							__stdlog__({ "Proof found in Module_0003 via Fast-Forward (FF)", " {", Theorem_0003[RHS].str(), ", ", Theorem_0003[RHS].str(), "}" });
+							auto opcode = LHSRouteHistoryMap[Theorem_0003[RHS]].begin() + ProofStackUInt64;
+							const auto OPCODE = LHSRouteHistoryMap[Theorem_0003[RHS]].end();
+							for (; opcode != OPCODE; ++opcode)
+								Theorem_0003.emplace_back(*opcode);
+							Theorem_0003[LHS] = Theorem_0003[RHS];
 
-									// Is the FF queue still empty? //
-									if (FastForwardTask_Thread.empty()) {
-										bFastForwardFlag = true;
-										FastForwardTask_Thread.push(Theorem_0003);
-										break;
-									}
+							// Is the FF queue still empty? //
+							if (FastForwardTask_Thread.empty()) {
+								bFastForwardFlag = true;
+								FastForwardTask_Thread.push(Theorem_0003);
+								break;
 							}
-							Tasks_Thread.push(Theorem_0003);
+						}
+						Tasks_Thread.push(Theorem_0003);
 					}
 
 					__stdlog__({ "" });
@@ -1087,7 +1099,7 @@ namespace Euclid_Prover
 
 		//*** End: Core Proof Engine (Loop) *** //
 
-		if (!QED)
+		/*if (!QED)
 		{
 			if (TempProofSteps.size())
 			{
@@ -1095,11 +1107,13 @@ namespace Euclid_Prover
 			} else {
 				__stdlog__({ "No Proof Found." });
 			}
-		}
+		}*/
 
 		__stdtraceout__("STDThreadProve\n");
 
 		OutProofFound_FlagRef = QED;
+
+		//print_path(OutProofStepStdStrVecRef);
 
 		OutStatusReadyFlag = true; /* Set the Status Variable, last */
 
@@ -1143,7 +1157,7 @@ namespace Euclid_Prover
 		template <BracketType type>
 		static std::vector<std::string> Elide(const std::vector<std::string>& input)
 		{
-			static_assert(std::is_same_v<decltype(type), BracketType>, "Invalid bracket type");
+			static_assert( std::is_same_v<decltype( type ), BracketType>, "Invalid bracket type" );
 			const std::string& openBrace = BracketTraits<type>::Open;
 			const std::string& closeBrace = BracketTraits<type>::Close;
 			std::vector<std::string> output;
@@ -1158,8 +1172,7 @@ namespace Euclid_Prover
 						OpenScopeFlag = true;
 					}
 					continue;
-				}
-				else if (c == closeBrace)
+				} else if (c == closeBrace)
 				{
 					if (OpenScopeFlag)
 					{
@@ -1176,15 +1189,15 @@ namespace Euclid_Prover
 		Usage Example:
 		const auto& output = CurlyBraceElide::Elide<BracketType::CurlyBraces>
 		(
-			{ 
-				"{", "{", "{", "1", "}", "}", "+", "{", "{", "1", "}", "}", "}", "=", "{", "{", "2", "}", "}" 
+			{
+				"{", "{", "{", "1", "}", "}", "+", "{", "{", "1", "}", "}", "}", "=", "{", "{", "2", "}", "}"
 			}
 		); // Output: { "{", "1", "}", "+", "{", "1", "}", "=", "{", "2", "}" }
 		*/
 		template <BracketType type>
 		static std::vector<std::string> Elide(const std::initializer_list<std::string>& input)
 		{
-			static_assert(std::is_same_v<decltype(type), BracketType>, "Invalid bracket type");
+			static_assert( std::is_same_v<decltype( type ), BracketType>, "Invalid bracket type" );
 			const std::vector<std::string>& input2(input);
 			return Elide<type>(input2);
 		}
@@ -1211,6 +1224,17 @@ namespace Euclid_Prover
 
 		bool ProofFoundFlag{};
 		bool StatusReadyFlag{};
+
+		std::vector<
+			std::vector<
+			std::vector<
+			std::string>>>
+			ProofStep3DStdStrVec;
+
+		std::vector<
+			std::vector<
+			std::string>>
+			AxiomCommitLogStdStrVecRef;
 
 		bool Axiom
 		(
@@ -1347,44 +1371,35 @@ namespace Euclid_Prover
 			std::vector<
 			std::vector<
 			std::string>>&
-			InProofVecConstCharRef,
-
-			std::vector<
-			std::vector<
-			std::vector<
-			std::vector<
-			std::string>>>>&
-			OutPath4DStdStrVecRef,
-
-			std::vector<
-			std::vector<
-			std::string>>&
-			OutAxiomCommitLogStdStrVecRef
+			InProofStdStrVecRef
 		)
 		{
 			__stdtracein__("Prove");
 
 			Reset();
 
-			ProofStep4DStdStrVec = OutPath4DStdStrVecRef;
-			TheoremStdStrVec = InProofVecConstCharRef;
+			//ProofStep3DStdStrVec = OutPath3DStdStrVecRef;
+			//TheoremStdStrVec = InProofStdStrVecRef;
+			//AxiomCommitLogStdStrVecRef = OutAxiomCommitLogStdStrVecRef;
 			/*
 			{
 				{"1", "+", "1", "+", "1", "+", "1"}, // (lhs) Prime Composite: 1585615607 //
 				{"4"} // (rhs) Prime Composite: 29 //
 			};
 			*/
-			th = std::async
+			/*th = */std::async
 			(
 				std::launch::async,
 				__Prove__,
-				std::cref(TheoremStdStrVec),
+				std::cref(InProofStdStrVecRef),
 				std::cref(AxiomsStdStrVec),
 				std::ref(ProofFoundFlag),
 				std::ref(StatusReadyFlag),
-				std::ref(ProofStep4DStdStrVec),
-				std::ref(OutAxiomCommitLogStdStrVecRef)
+				std::ref(ProofStep3DStdStrVec),
+				std::ref(AxiomCommitLogStdStrVecRef)
 			);
+			//th.get();
+			//print_path(ProofStep3DStdStrVec);
 
 			__stdtraceout__("Prove");
 
@@ -1396,19 +1411,7 @@ namespace Euclid_Prover
 			std::initializer_list<
 			std::vector<
 			std::string>>&
-			InProofInitListConstStdStrVecRef,
-
-			std::vector<
-			std::vector<
-			std::vector<
-			std::vector<
-			std::string>>>>&
-			OutPath4DStdStrVecRef,
-
-			std::vector<
-			std::vector<
-			std::string>>&
-			OutAxiomCommitLogStdStrVecRef
+			InProofInitListConstStdStrVecRef
 		)
 		{
 			const
@@ -1417,95 +1420,44 @@ namespace Euclid_Prover
 				std::string>>&
 				InProofVecConstCharRef{ InProofInitListConstStdStrVecRef };
 
-			Prove
-			(
-				InProofVecConstCharRef,
-				OutPath4DStdStrVecRef,
-				OutAxiomCommitLogStdStrVecRef
-			);
+			Prove(InProofVecConstCharRef);
 		}
 
 		bool StatusReady()
 		{
 			__stdtracein__("StatusReady");
 
-			th.get();
+			if (th.valid())
+				th.get();
+
 			__stdtraceout__("StatusReady");
-			return true;
+			return StatusReadyFlag;
 		}
 
-		void PrintPath(const std::vector<std::vector<std::string>>& OutAxiomCommitLogStdStrVecRef)
-		{
-			const std::size_t I = OutAxiomCommitLogStdStrVecRef.size();
-			std::cout << "AxiomCommitLogStdSrVec = {\n";
-			for (std::size_t i = 0; i < I; ++i)
-			{
-				std::cout << "{ ";
-				bool Delimited{};
-				for (const std::string& str : OutAxiomCommitLogStdStrVecRef[i])
-				{
-					std::cout << ( Delimited ? ", " : "" ) << str;
-					Delimited = true;
-				}
-				if (i + 1 < I)
-				{
-					std::cout << " },\n";
-				} else {
-					std::cout << " }\n";
-				}
-			}
-			std::cout << "}\n";
-		}
-		
-		void PrintPath(const std::vector<
-			std::vector<
-			std::vector<
-			std::vector<
-			std::string>>>>&OutProofStep4DStdStrVec)
-		{
-			std::cout << "Proofstep = {\n";
-			for (size_t w = 0; w < OutProofStep4DStdStrVec.size(); ++w)
-			{
-				std::cout << "{\n";
-				for (size_t x = 0; x < OutProofStep4DStdStrVec[w].size(); ++x)
-				{
-					std::cout << "{\n";
-					const std::size_t I = OutProofStep4DStdStrVec[w][x].size();
-					for (std::size_t i = 0; i < I; ++i)
-					{
-						std::cout << "{ ";
-						bool Delimited{};
-						for (const std::string& str : OutProofStep4DStdStrVec[w][x][i])
-						{
-							std::cout << ( Delimited ? ", " : "" ) << str;
-							Delimited = true;
-						}
-						if (i + 1 < I)
-						{
-							std::cout << " },\n";
-						} else {
-							std::cout << " }";
-						}
-					}
-					if (x + 1 < OutProofStep4DStdStrVec[w].size())
-					{
-						std::cout << "\n},\n";
-					} else {
-						std::cout << "\n}\n";
-					}
-				}
-				if (w + 1 < OutProofStep4DStdStrVec.size())
-				{
-					std::cout << "},\n";
-				} else {
-					std::cout << "}\n";
-				}
-			}
-			std::cout << "}\n";
-		}
+		// Handle case when T is not a vector
+		template <typename T>
+		typename std::enable_if<!std::is_same<T, std::vector<typename T::value_type>>::value, void>::type
+			PrintPath(const T& element) {
+			std::cout << " " << element << " ";
+		};
 
+		// Handle case when T is a vector
+		template <typename T>
+		typename std::enable_if<std::is_same<T, std::vector<typename T::value_type>>::value, void>::type
+			PrintPath(const T& vector) {
+			// Add a newline and indent each level of depth
+			std::cout << std::string(depth % 2, '\n') << "{ ";
+			depth++;
+			for (const auto& element : vector) {
+				PrintPath(element);
+			}
+			depth--;
+			std::cout << " }";
+		};
 
 	private:
+		std::size_t depth = 0;
+
 		const std::string _openBrace;
 		const std::string _openBraceST;
 		const std::string _closeBrace;
@@ -1514,22 +1466,15 @@ namespace Euclid_Prover
 		std::future<int> th;
 
 		std::vector<
-		std::vector<
-		std::vector<
-		std::string>>>
-		AxiomsStdStrVec{};
+			std::vector<
+			std::vector<
+			std::string>>>
+			AxiomsStdStrVec{};
 
 		std::vector<
-		std::vector<
-		std::string>>
-		TheoremStdStrVec{};
-
-		std::vector<
-		std::vector<
-		std::vector<
-		std::vector<
-		std::string>>>>
-		ProofStep4DStdStrVec{};
+			std::vector<
+			std::string>>
+			TheoremStdStrVec{};
 
 		void Reset()
 		{
@@ -1566,4 +1511,4 @@ namespace Euclid_Prover
 using EuclidProverClass =
 
 Euclid_Prover::EuclidProver<
-Euclid_Prover::BracketType::CurlyBraces>;
+	Euclid_Prover::BracketType::CurlyBraces>;
